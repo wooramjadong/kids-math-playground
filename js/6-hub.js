@@ -2,7 +2,7 @@
    여기에 한 줄만 추가하면 홈 화면에 버튼이 생겨요. 별 없이 언제든지 열 수 있어요. */
 const HUB=[
   {icon:'🔤',title:'영어 놀이',sub:'언제든지 자유롭게',url:'https://home-dun-zeta.vercel.app/',color:'#DBEAFE',border:'#93C5FD',ink:'#1E3A8A'},
-  // {icon:'⌨️',title:'키보드 놀이',sub:'타자 연습',url:'https://…',color:'#DCFCE7',border:'#86EFAC',ink:'#14532D'},
+  {icon:'⌨️',title:'키보드 놀이',sub:'한글 타자 연습',url:'https://korean-typing-practice-liart.vercel.app/',color:'#DCFCE7',border:'#86EFAC',ink:'#14532D'},
 ];
 function renderHub(){
   const el=$('#hub');if(!el)return;
