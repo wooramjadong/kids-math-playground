@@ -32,8 +32,8 @@ const GEN31={
         return add?{tag:'세 자리 수 덧셈',prompt:'□ 안에 알맞은 수를 쓰세요.',eqHTML:`<span class="q">□</span> + ${b} = ${a+b}`,input:{type:'num'},ans:a,explain:`${a+b} − ${b} = ${a}. 덧셈은 뺄셈으로 거꾸로 구해요.`}
           :{tag:'세 자리 수 뺄셈',prompt:'□ 안에 알맞은 수를 쓰세요.',eqHTML:`${a+b} − <span class="q">□</span> = ${a}`,input:{type:'num'},ans:b,explain:`${a+b} − ${a} = ${b}`};}
       const a=rnd(150,400),b=rnd(120,300),c=rnd(100,250);return {tag:'세 수의 계산',prompt:'앞에서부터 차례로 계산하세요.',eqHTML:`<span class="small">${a} + ${b} − ${c} =</span>`,input:{type:'num'},ans:a+b-c,explain:`${a} + ${b} = ${a+b}, ${a+b} − ${c} = ${a+b-c}`};}
-    if(Math.random()<.5){const a=rnd(125,689),b=rnd(125,689);return {tag:'세 자리 수 덧셈',prompt:'계산해 보세요.',eqHTML:`${a} + ${b} =`,input:{type:'num'},ans:a+b,explain:'일의 자리부터 더하고, 10이 넘으면 윏자리로 받아올림해요.'};}
-    const a=rnd(400,950),b=rnd(125,a-100);return {tag:'세 자리 수 뺄셈',prompt:'계산해 보세요.',eqHTML:`${a} − ${b} =`,input:{type:'num'},ans:a-b,explain:'일의 자리부터 빼고, 모자라면 윏자리에서 받아내림해요.'};},
+    if(Math.random()<.5){const a=rnd(125,689),b=rnd(125,689);return {tag:'세 자리 수 덧셈',prompt:'계산해 보세요.',eqHTML:`${a} + ${b} =`,input:{type:'num'},ans:a+b,explain:'일의 자리부터 더하고, 10이 넘으면 윗자리로 받아올림해요.'};}
+    const a=rnd(400,950),b=rnd(125,a-100);return {tag:'세 자리 수 뺄셈',prompt:'계산해 보세요.',eqHTML:`${a} − ${b} =`,input:{type:'num'},ans:a-b,explain:'일의 자리부터 빼고, 모자라면 윗자리에서 받아내림해요.'};},
 
   shape(i,hard){
     const colors=['#FDE68A','#BFDBFE','#FBCFE8','#BBF7D0'];
@@ -44,7 +44,7 @@ const GEN31={
     const t=pick(['find','line','right']);
     if(t==='find'){const all=['직각삼각형','직사각형','정사각형','원','삼각형'];const k=pick(['직각삼각형','직사각형','정사각형']);const opts=shuffle([k,...shuffle(all.filter(x=>x!==k)).slice(0,2)]);
       return {tag:'평면도형',prompt:`${k}은 어느 것일까요?`,input:{type:'choice',options:opts.map(o=>({v:o,html:polySVG(o,pick(colors))}))},check:v=>v===k,sol:k,explain:k==='직각삼각형'?'한 각이 직각인 삼각형이에요.':k==='정사각형'?'네 각이 모두 직각이고 네 변의 길이가 모두 같아요.':'네 각이 모두 직각인 사각형이에요.'};}
-    if(t==='line'){const k=pick(['선분','반직선','직선']);return {tag:'선분·반직선·직선',prompt:'이것의 이름은?',visual:polySVG(k),input:{type:'choice',options:['선분','반직선','직선']},check:v=>v===k,sol:k,explain:k==='선분'?'두 점을 곶게 이은 선이에요.':k==='반직선'?'한 점에서 한쪽으로 끝없이 늘인 선이에요.':'양쪽으로 끝없이 늘인 선이에요.'};}
+    if(t==='line'){const k=pick(['선분','반직선','직선']);return {tag:'선분·반직선·직선',prompt:'이것의 이름은?',visual:polySVG(k),input:{type:'choice',options:['선분','반직선','직선']},check:v=>v===k,sol:k,explain:k==='선분'?'두 점을 곧게 이은 선이에요.':k==='반직선'?'한 점에서 한쪽으로 끝없이 늘인 선이에요.':'양쪽으로 끝없이 늘인 선이에요.'};}
     const k=pick(['직사각형','정사각형','직각삼각형','삼각형']);const ans=k==='직각삼각형'?'1개':k==='삼각형'?'0개':'4개';
     return {tag:'직각 세기',prompt:'이 도형에는 직각이 몇 개 있을까요?',visual:polySVG(k,pick(colors)),input:{type:'choice',options:['0개','1개','2개','4개']},check:v=>v===ans,sol:ans,explain:`${k}에는 직각이 ${ans} 있어요.`};},
 
@@ -140,7 +140,7 @@ const HARD3={
       return {tag:'큰 수 심화',prompt:`숫자 카드 ${digits.map(x=>`[${x}]`).join(' ')}를 한 번씩 모두 사용해 만들 수 있는 가장 ${big?'큰':'작은'} 다섯 자리 수는?`,input:{type:'num'},ans,solText:fmt(ans),explain:big?'큰 숫자부터 앞자리에 놓아요.':'작은 숫자부터 놓되, 0은 맨 앞에 올 수 없어요.'};}
     const n=rnd(1,9)*1000000000000+rnd(1,9999)*100000000+rnd(0,9999)*10000;return {tag:'조 단위 읽기',prompt:'이 수를 바르게 읽은 것은?',eqHTML:`<span class="small">${fmt(n)}</span>`,input:{type:'choice',options:shuffle([readKo(n),readKo(n/10),readKo(n*10)])},check:v=>v===readKo(n),sol:readKo(n),explain:'일·만·억·조: 네 자리씩 끊어서 읽어요.'};},
   angle(){const t=pick(['line','clock']);
-    if(t==='line'){const a=rnd(25,150);return {tag:'각도 심화',prompt:`직선 위에 각이 놓여 있어요. ${a}°일 때 나머지 각 ㊀은?`,visual:`<svg width="240" height="120" viewBox="0 0 240 120"><line x1="10" y1="100" x2="230" y2="100" stroke="#26282F" stroke-width="4"/><line x1="120" y1="100" x2="${(120+90*Math.cos(Math.PI*(180-a)/180)).toFixed(1)}" y2="${(100-90*Math.sin(Math.PI*(180-a)/180)).toFixed(1)}" stroke="#26282F" stroke-width="4"/><text x="150" y="86" font-size="16" font-weight="700">${a}°</text><text x="70" y="86" font-size="16" font-weight="700" fill="#E03A2C">㊀</text></svg>`,input:{type:'num',unit:'°'},ans:180-a,explain:`직선이 이루는 각은 180°. 180 − ${a} = ${180-a}`};}
+    if(t==='line'){const a=rnd(25,150);return {tag:'각도 심화',prompt:`직선 위에 각이 놓여 있어요. ${a}°일 때 나머지 각 ㉠은?`,visual:`<svg width="240" height="120" viewBox="0 0 240 120"><line x1="10" y1="100" x2="230" y2="100" stroke="#26282F" stroke-width="4"/><line x1="120" y1="100" x2="${(120+90*Math.cos(Math.PI*(180-a)/180)).toFixed(1)}" y2="${(100-90*Math.sin(Math.PI*(180-a)/180)).toFixed(1)}" stroke="#26282F" stroke-width="4"/><text x="150" y="86" font-size="16" font-weight="700">${a}°</text><text x="70" y="86" font-size="16" font-weight="700" fill="#E03A2C">㉠</text></svg>`,input:{type:'num',unit:'°'},ans:180-a,explain:`직선이 이루는 각은 180°. 180 − ${a} = ${180-a}`};}
     const h=pick([1,2,3,4,5,6]);return {tag:'시계 각도',prompt:`시계가 ${h}시 정각일 때, 두 바늘이 이루는 작은 쪽 각의 크기는?`,visual:clockSVG(h,0),input:{type:'choice',options:shuffle([`${h*30}°`,`${h*30+30}°`,`${Math.max(h*30-30,15)}°`,`${h*15}°`].filter((v,i,a)=>a.indexOf(v)===i))},check:v=>v===`${h*30}°`,sol:`${h*30}°`,explain:`시계 한 바퀴는 360°, 숫자 한 칸은 30°. ${h}칸이면 ${h*30}°`};},
   pattern(){const t=pick(['tri','mixed']);
     if(t==='tri'){const seq=[1,3,6,10,15];return {tag:'규칙 심화',prompt:'점을 삼각형 모양으로 쌓아요. 다음 수는?',eqHTML:`<span class="small">${seq.join(', ')}, <b>?</b></span>`,input:{type:'num'},ans:21,explain:'더하는 수가 2, 3, 4, 5로 커져요. 15 + 6 = 21'};}
