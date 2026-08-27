@@ -25,7 +25,7 @@ button:focus-visible,.field:focus-visible,.cell:focus-visible{outline:4px solid 
 .iconbtn{font-size:20px;padding:6px 8px;border-radius:12px}
 .iconbtn.off{opacity:.4}
 .starbank{display:flex;align-items:center;gap:4px;font-weight:700;background:var(--yellow);padding:6px 12px;border-radius:999px;font-size:15px}
-@media(max-width:560px){.brand{font-size:20px}.agetog button small{display:none}.agetog button{padding:8px 9px;font-size:13px}.starbank{padding:6px 8px;font-size:13px}.topin{gap:5px;padding:8px 10px}.iconbtn{padding:6px 4px}}
+@media(max-width:560px){.brand{font-size:18px}.agetog button small{display:none}.agetog button{padding:8px 7px;font-size:13px}.starbank{padding:6px 8px;font-size:13px}.topin{gap:5px;padding:8px 10px}.iconbtn{padding:6px 4px}}
 
 main{max-width:720px;margin:0 auto;padding:16px 14px 44px}
 .screen{animation:fade .25s ease}
@@ -38,7 +38,7 @@ main{max-width:720px;margin:0 auto;padding:16px 14px 44px}
 .legend{display:flex;gap:8px;flex-wrap:wrap}
 .legend:not(:empty){margin-top:10px}
 .badge{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;color:#fff;letter-spacing:.2px}
-.badge.g{background:var(--green)}.badge.p{background:var(--purple)}
+.badge.g{background:var(--green)}.badge.p{background:var(--purple)}.badge.b{background:var(--blue)}
 .stickers{margin-top:12px;background:#FFF6D6;border:3px dashed #F1D67A;border-radius:14px;padding:10px 12px;min-height:56px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .stickers .lbl{font-size:13px;font-weight:700;color:#9A7B1E;width:100%}
 .stickers .st{font-size:30px;line-height:1;animation:pop .4s cubic-bezier(.2,1.5,.4,1)}
