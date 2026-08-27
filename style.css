@@ -81,6 +81,24 @@ main{max-width:720px;margin:0 auto;padding:16px 14px 44px}
 .hubcard .hs{font-size:13px;opacity:.8}
 .hubcard .hgo{font-size:13px;font-weight:700;margin-top:6px}
 
+/* 기기 연결 */
+.synctabs{display:flex;border:3px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:12px}
+.synctabs button{flex:1;padding:10px;font-weight:700;font-size:14px}
+.synctabs button.on{background:var(--ink);color:#fff}
+.qrwrap{text-align:center}
+.qrwrap #qr{display:inline-block;padding:10px;background:#fff;border:3px solid var(--line);border-radius:14px}
+.qrwrap #qr img,.qrwrap #qr canvas{display:block}
+.qrhint{font-size:12px;color:var(--ink-soft);margin-top:6px}
+
+/* 가족 코드 (클라우드) */
+.cloudsec{margin-top:14px;padding:12px 14px;border:3px dashed #C4B5FD;border-radius:14px;background:#FAF5FF}
+.cloudhead{font-weight:700;font-size:16px;color:#5B21B6}
+.familycode{font-size:34px;font-weight:700;letter-spacing:4px;text-align:center;background:#fff;border:3px solid #C4B5FD;border-radius:12px;padding:8px;margin-top:6px;font-variant-numeric:tabular-nums}
+.cloudok{font-size:13px;color:#065F46;background:#D1FAE5;border-radius:8px;padding:6px 10px}
+.cloudwarn{font-size:13px;color:#92400E;background:#FEF3C7;border-radius:8px;padding:6px 10px}
+.cloudpill{font-size:11px;font-weight:700;background:#EDE9FE;color:#5B21B6;padding:4px 8px;border-radius:999px;white-space:nowrap}
+@media(max-width:560px){.cloudpill{display:none}}
+
 /* 카드놀이 */
 .cardplay{background:linear-gradient(135deg,#F3E8FF,#FFE4F1);border:3px solid #D8B4FE;border-radius:var(--r);padding:14px 16px;margin-bottom:14px}
 .cp-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap}
