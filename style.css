@@ -72,6 +72,15 @@ main{max-width:720px;margin:0 auto;padding:16px 14px 44px}
 .walletline .why{color:#92400E;font-weight:700;font-size:13px}
 @media(max-width:560px){.agetog button{padding:8px 7px;font-size:12px}}
 
+/* 다른 놀이 허브 */
+.hub{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:14px}
+.hubcard{display:flex;flex-direction:column;gap:2px;border:3px solid;border-radius:var(--r);padding:14px 16px;text-decoration:none;box-shadow:0 5px 0 rgba(0,0,0,.08);transition:transform .1s}
+.hubcard:active{transform:translateY(4px);box-shadow:none}
+.hubcard .hi{font-size:34px;line-height:1.1}
+.hubcard .ht{font-size:24px;font-weight:700;line-height:1.1}
+.hubcard .hs{font-size:13px;opacity:.8}
+.hubcard .hgo{font-size:13px;font-weight:700;margin-top:6px}
+
 /* 카드놀이 */
 .cardplay{background:linear-gradient(135deg,#F3E8FF,#FFE4F1);border:3px solid #D8B4FE;border-radius:var(--r);padding:14px 16px;margin-bottom:14px}
 .cp-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap}
