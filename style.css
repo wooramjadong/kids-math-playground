@@ -20,12 +20,12 @@ button:focus-visible,.field:focus-visible,.cell:focus-visible{outline:4px solid 
 .brand{font-size:28px;font-weight:700;line-height:1;white-space:nowrap}
 .spacer{flex:1}
 .agetog{display:inline-flex;border:3px solid var(--ink);border-radius:999px;overflow:hidden;background:#fff}
-.agetog button{padding:6px 11px;font-weight:700;font-size:14px;line-height:1.1}
+.agetog button{padding:6px 11px;font-weight:700;font-size:14px;line-height:1.1;white-space:nowrap}
 .agetog button.on{background:var(--ink);color:#fff}
 .iconbtn{font-size:20px;padding:6px 8px;border-radius:12px}
 .iconbtn.off{opacity:.4}
 .starbank{display:flex;align-items:center;gap:4px;font-weight:700;background:var(--yellow);padding:6px 12px;border-radius:999px;font-size:15px}
-@media(max-width:560px){.brand{font-size:18px}.agetog button small{display:none}.agetog button{padding:8px 7px;font-size:13px}.starbank{padding:6px 8px;font-size:13px}.topin{gap:5px;padding:8px 10px}.iconbtn{padding:6px 4px}}
+@media(max-width:560px){.brand{font-size:20px}.agetog button small{display:none}.agetog button{padding:8px 9px;font-size:13px}.starbank{padding:6px 8px;font-size:13px}.topin{gap:5px;padding:8px 10px}.iconbtn{padding:6px 4px}}
 
 main{max-width:720px;margin:0 auto;padding:16px 14px 44px}
 .screen{animation:fade .25s ease}
@@ -38,7 +38,7 @@ main{max-width:720px;margin:0 auto;padding:16px 14px 44px}
 .legend{display:flex;gap:8px;flex-wrap:wrap}
 .legend:not(:empty){margin-top:10px}
 .badge{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;color:#fff;letter-spacing:.2px}
-.badge.g{background:var(--green)}.badge.p{background:var(--purple)}.badge.b{background:var(--blue)}
+.badge.g{background:var(--green)}.badge.p{background:var(--purple)}
 .stickers{margin-top:12px;background:#FFF6D6;border:3px dashed #F1D67A;border-radius:14px;padding:10px 12px;min-height:56px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .stickers .lbl{font-size:13px;font-weight:700;color:#9A7B1E;width:100%}
 .stickers .st{font-size:30px;line-height:1;animation:pop .4s cubic-bezier(.2,1.5,.4,1)}
@@ -57,6 +57,20 @@ main{max-width:720px;margin:0 auto;padding:16px 14px 44px}
 .mode .stars .off{opacity:.2}
 .mode .best{font-size:11px;color:var(--ink-soft)}
 .mode .badge{position:absolute;top:12px;right:12px}
+
+/* 설정 모달 / 자격 안내 / 심화 */
+.modal{position:fixed;inset:0;background:rgba(43,42,51,.55);z-index:20;display:flex;align-items:center;justify-content:center;padding:16px}
+.modalbox{width:100%;max-width:440px;max-height:90vh;overflow:auto}
+.level.on{border-color:var(--purple);background:#F5F3FF}
+.eligible{margin-top:10px;font-size:13px;line-height:1.5}
+.eligible .ok{color:#065F46;background:#D1FAE5;padding:3px 10px;border-radius:999px;font-weight:700}
+.eligible .warn{color:#92400E;background:#FEF3C7;padding:3px 10px;border-radius:999px;font-weight:700}
+.eligible .hint{color:var(--ink-soft)}
+.tag.hard{background:#FEE2E2;color:#B91C1C}
+.qcard.hardcard{border-color:#FCA5A5;box-shadow:0 0 0 4px #FEE2E2}
+.walletline .bonus{color:#065F46;font-weight:700;font-size:13px}
+.walletline .why{color:#92400E;font-weight:700;font-size:13px}
+@media(max-width:560px){.agetog button{padding:8px 7px;font-size:12px}}
 
 /* 카드놀이 */
 .cardplay{background:linear-gradient(135deg,#F3E8FF,#FFE4F1);border:3px solid #D8B4FE;border-radius:var(--r);padding:14px 16px;margin-bottom:14px}

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>수학 놀이터 — 7세 · 8세 · 3학년 1·2학기</title>
+<title>수학 놀이터 — 7세 · 8세 · 3학년</title>
 <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=3">
 </head>
@@ -15,12 +15,20 @@
   <div class="agetog" id="groupTog">
     <button data-g="7">7세<br><small style="font-weight:400">입학 준비</small></button>
     <button data-g="8">8세<br><small style="font-weight:400">1학년</small></button>
-    <button data-g="31">3-1<br><small style="font-weight:400">복습</small></button>
-    <button data-g="3">3-2<br><small style="font-weight:400">3학년</small></button>
+    <button data-g="31">3-1<br><small style="font-weight:400">3학년 1학기</small></button>
+    <button data-g="3">3-2<br><small style="font-weight:400">3학년 2학기</small></button>
   </div>
   <div class="starbank" title="쓸 수 있는 별">⭐ <b id="totalStars">0</b></div>
   <button class="iconbtn" id="voiceBtn" title="읽어주기 켜기/끄기">🔊</button>
+  <button class="iconbtn" id="gearBtn" title="내 학년 설정">⚙️</button>
 </div></header>
+
+<div id="setup" class="modal hidden"><div class="modalbox card">
+  <h2 class="display" id="setupTitle" style="margin:0 0 4px;font-size:30px">누가 할까요?</h2>
+  <p style="margin:0;color:var(--ink-soft);font-size:14px">내 학년으로 정해진 단원에서만 별을 받아요. 다른 학년은 연습으로 할 수 있어요. (⚙️ 버튼으로 언제든 바꿀 수 있어요)</p>
+  <div class="levels" id="setupList"></div>
+  <button class="btn ghost" id="setupClose" style="margin-top:12px;width:100%">닫기</button>
+</div></div>
 
 <main>
   <section id="home" class="screen">
@@ -28,6 +36,7 @@
       <h1 class="display" id="heroTitle"></h1>
       <p id="heroDesc"></p>
       <div class="legend" id="legend"></div>
+      <div class="eligible" id="eligible"></div>
       <div class="stickers" id="stickers"></div>
     </div>
     <div class="cardplay" id="cardplay"></div>
@@ -50,7 +59,7 @@
       <div class="timer hidden" id="timer">60</div>
       <div class="combo" id="combo"></div>
     </div>
-    <div class="card qcard">
+    <div class="card qcard" id="qcard">
       <div id="tagline"></div>
       <div class="prompt"><span class="txt" id="prompt"></span><button class="speak" id="speakBtn" title="다시 읽어주기">🔊</button></div>
       <div class="visual" id="visual"></div>
