@@ -21,18 +21,22 @@ const VOX={list:[],chosen:null,
 };
 if('speechSynthesis'in window){VOX.refresh();speechSynthesis.onvoiceschanged=()=>{VOX.refresh();if($('#voiceSec'))renderVoiceSec();};}
 
-/* voice.say 교체: 고른 목소리 + 밝고 다정한 톤 */
+/* voice.say 교체: 고른 목소리로 자연스럽게
+   ※ pitch를 바꾸면 크롬 등 일부 음성에서 기계음/찌그러짐이 생겨서 원래 톤(1.0) 그대로 씁니다. */
+let _sayTimer=null;
 voice.say=function(t,opt={}){
   if(!this.on||!('speechSynthesis'in window)||!t)return;
   try{
     speechSynthesis.cancel();
+    clearTimeout(_sayTimer);
     const u=new SpeechSynthesisUtterance(String(t).replace(/<[^>]+>/g,' '));
     u.lang='ko-KR';
     const v=VOX.get();if(v)u.voice=v;
     u.rate=opt.rate||0.95;   // 살짝 천천히
-    u.pitch=1.18;            // 살짝 높게 → 다정한 느낌
+    u.pitch=1;               // 음정 변형 없음 (변형 시 일부 음성이 기계음처럼 들림)
     u.volume=1;
-    speechSynthesis.speak(u);
+    // 크롬은 cancel 직후 바로 speak하면 소리가 겹치거나 깨질 수 있어 잠깐 쉬고 말해요
+    _sayTimer=setTimeout(()=>{try{speechSynthesis.speak(u);}catch(e){}},60);
   }catch(e){}
 };
 
