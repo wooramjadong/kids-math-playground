@@ -72,6 +72,13 @@ main{max-width:720px;margin:0 auto;padding:16px 14px 44px}
 .walletline .why{color:#92400E;font-weight:700;font-size:13px}
 @media(max-width:560px){.agetog button{padding:8px 7px;font-size:12px}}
 
+/* 확장: 토글 스크롤 · 졸업 */
+.agetog{max-width:100%}
+@media(max-width:640px){.topin{flex-wrap:wrap}.agetog{order:9;width:100%;overflow-x:auto;justify-content:flex-start;-webkit-overflow-scrolling:touch;scrollbar-width:none}.agetog::-webkit-scrollbar{display:none}.agetog button{flex:none}}
+.eligible .grad{color:#5B21B6;background:#EDE9FE;padding:3px 10px;border-radius:999px;font-weight:700}
+.result .gradline{font-size:14px;font-weight:700;color:#5B21B6;background:#F5F3FF;border-radius:10px;padding:7px 10px;margin-bottom:14px}
+#gradbox .stamp{animation-delay:.2s}
+
 /* 다른 놀이 허브 */
 .hub{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:14px}
 .hubcard{display:flex;flex-direction:column;gap:2px;border:3px solid;border-radius:var(--r);padding:14px 16px;text-decoration:none;box-shadow:0 5px 0 rgba(0,0,0,.08);transition:transform .1s}
