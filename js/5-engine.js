@@ -1,10 +1,15 @@
 /* ───────── 그룹/단원 정의 ───────── */
 const GROUPS={
   '7':{label:'7세',sub:'입학 준비',title:'하나, 둘, 셋! 놀면서 배워요.',desc:'글을 몰라도 괜찮아요. 🔊를 누르면 문제를 읽어 줘요. 8문제를 풀면 별과 스티커를 받고, 별 5개로 카드놀이를 할 수 있어요!',total:8,voice:true},
-  '8':{label:'8세',sub:'1학년',title:'1학년 수학, 그림으로 척척!',desc:'1학년 1학기 복습과 2학기 미리 배우기. 별 5개를 모으면 카드놀이 1판!',total:8,voice:true},
+  '8':{label:'8세',sub:'1학년 1학기',title:'1학년 수학, 그림으로 척척!',desc:'1학년 1학기 복습과 2학기 미리 배우기. 별 5개를 모으면 카드놀이 1판!',total:8,voice:true},
+  '82':{label:'1-2',sub:'1학년 2학기',title:'1학년 2학기, 받아올림 정복!',desc:'100까지의 수, 받아올림 덧셈, 받아내림 뺄셈, 세 수의 계산. 중간에 🔥 심화 문제가 3개 섞여 있어요.',total:8,voice:true},
   '31':{label:'3-1',sub:'3학년 1학기',title:'3학년 1학기, 기초를 탄탄하게.',desc:'세 자리 수 계산, 평면도형, 나눗셈, 곱셈, 길이와 시간, 분수와 소수. 중간에 🔥 심화 문제가 2개 섞여 있어요.',total:10,voice:false},
   '3':{label:'3-2',sub:'3학년 2학기',title:'오늘도 한 칸씩, 차근차근.',desc:'초록은 3학년 2학기 단원, 보라는 4학년 미리 배우기예요. 중간에 🔥 심화 문제가 2개 섞여 있어요.',total:10,voice:false},
+  '41':{label:'4-1',sub:'4학년 1학기',title:'4학년 1학기, 더 큰 세계로.',desc:'만·억·조 큰 수, 각도, (세 자리)×(두 자리), 도형 뒤집기와 돌리기, 막대그래프. 중간에 🔥 심화 문제가 3개 섞여 있어요.',total:10,voice:false},
+  '42':{label:'4-2',sub:'4학년 2학기',title:'4학년 2학기, 마지막 관문!',desc:'분수·소수의 덧셈과 뺄셈, 삼각형과 사각형 분류, 꺾은선그래프, 다각형. 중간에 🔥 심화 문제가 3개 섞여 있어요.',total:10,voice:false},
 };
+const ORDER=['7','8','82','31','3','41','42'];
+const nextGroup=g=>ORDER[ORDER.indexOf(g)+1]||null;
 const MODES_31=[
   {id:'addsub',icon:'➕',title:'덧셈과 뺄셈',sub:'세 자리 수 · 받아올림 · 받아내림',badge:'3-1',cls:'g'},
   {id:'shape',icon:'📐',title:'평면도형',sub:'직각 · 직각삼각형 · 직사각형 · 정사각형',badge:'3-1',cls:'g'},
@@ -41,8 +46,11 @@ const LEVELS={
 };
 const STICKERS=['🦁','🐼','🦊','🐰','🐨','🦄','🐙','🦖','🐳','🦋','🌈','🍩','🚀','🎸','🏆','🎁','🐯','🐧','🦉','🍭'];
 const isY=()=>P.group==='7'||P.group==='8';
-const modesNow=()=>isY()?MODES_Y:P.group==='31'?MODES_31:MODES_3;
-const isHardIdx=(i,total)=>total===8?(i===3||i===6):(i===4||i===8);
+const MODES_MAP={'7':()=>MODES_Y,'8':()=>MODES_Y,'82':()=>MODES_82,'31':()=>MODES_31,'3':()=>MODES_3,'41':()=>MODES_41,'42':()=>MODES_42};
+const modesNow=()=>MODES_MAP[P.group]();
+const GEN_EXT={'82':()=>GEN82,'31':()=>GEN31,'41':()=>GEN41,'42':()=>GEN42};
+const HARD_IDX={8:[2,4,6],10:[3,6,8]}; // 8문제 판 3개(37.5%) · 10문제 판 3개(30%)
+const isHardIdx=(i,total)=>(HARD_IDX[total]||[]).includes(i);
 const eligibleNow=()=>P.group===P.myGroup;
 const modeInfo=id=>modesNow().find(m=>m.id===id);
 
@@ -65,13 +73,33 @@ function renderHome(){
     return `<button class="mode" onclick="startMode('${m.id}')">${m.badge?`<span class="badge ${m.cls}">${m.badge}</span>`:''}<span class="icon">${m.icon}</span><span class="t display">${m.title}</span><span class="s">${sub}</span><span class="stars">${stars}</span>${best}</button>`;}).join('');
   $('#totalStars').textContent=P.wallet;renderCard();
   const d=daily();const mine=eligibleNow();
-  $('#eligible').innerHTML=mine?`<span class="ok">⭐ 내 학년 · 오늘 별 <b>${d.earned}</b> / ${DAILY_CAP}</span> <span class="hint">같은 단원은 하루 2번까지 별을 받아요</span>`
-    :`<span class="warn">✏️ 연습 모드 — 내 학년(${GROUPS[P.myGroup].label})이 아니라 별은 받지 않아요</span>`;
+  const gp=gradProgress(P.group);
+  const gtxt=P.grad&&P.grad[P.group]?`<span class="grad">🎓 졸업! ${nextGroup(P.group)?`다음: ${GROUPS[nextGroup(P.group)].label}`:'모든 과정 완료 👑'}</span>`:`<span class="hint">🎓 별 3개 단원 <b>${gp.n}</b>/${gp.total}</span>`;
+  $('#eligible').innerHTML=(mine?`<span class="ok">⭐ 내 학년 · 오늘 별 <b>${d.earned}</b> / ${DAILY_CAP}</span> <span class="hint">같은 단원은 하루 2번까지 별을 받아요</span>`
+    :`<span class="warn">✏️ 연습 모드 — 내 학년(${GROUPS[P.myGroup].label})이 아니라 별은 받지 않아요</span>`)+' '+gtxt;
   $('#stickers').innerHTML=`<span class="lbl">내 스티커판 (${P.stickers.length}개)</span>`+(P.stickers.length?P.stickers.map(s=>`<span class="st">${s}</span>`).join(''):'<span class="empty">문제를 풀고 첫 스티커를 받아 보세요!</span>');
+}
+function gradProgress(g){const modes=MODES_MAP[g]();const d=P.done[g]||{};let n=0;for(const m of modes)if((d[m.id]||{}).stars>=3)n++;return {n,total:modes.length};}
+function showGrad(g){
+  const nx=nextGroup(g);let box=$('#gradbox');
+  if(!box){box=document.createElement('div');box.id='gradbox';box.className='modal';document.body.appendChild(box);}else box.classList.remove('hidden');
+  box.innerHTML=`<div class="modalbox card" style="text-align:center">
+    <div style="font-size:64px;line-height:1">🎓🏆</div>
+    <div class="stamp" style="animation-delay:.2s">참<br>잘했어요<small>${GROUPS[g].label} 전 단원 ⭐3</small></div>
+    <h2 class="display" style="font-size:34px;margin:6px 0 2px">${GROUPS[g].sub} 과정 졸업!</h2>
+    <p style="color:var(--ink-soft);font-size:14px;margin:0">모든 단원에서 별 3개를 모았어요 · ${today()}</p>
+    ${nx?`<p style="font-size:16px;margin:14px 0 8px">다음 단계는 <b>${GROUPS[nx].label} · ${GROUPS[nx].sub}</b>이에요!</p>
+      <button class="btn purple" style="width:100%" id="gradNext">🚀 다음 단계 시작하기 (내 학년도 바뀌어요)</button>`
+      :`<p style="font-size:17px;margin:14px 0 8px"><b>모든 과정을 마쳤어요! 👑 진짜 수학왕이에요!</b></p>`}
+    <button class="btn ghost" style="width:100%;margin-top:10px" id="gradClose">홈으로</button>
+  </div>`;
+  audio.win();voice.say('축하해요! '+GROUPS[g].sub+' 과정을 졸업했어요!');
+  $('#gradClose').onclick=()=>{box.classList.add('hidden');goHome();};
+  const nb=$('#gradNext');if(nb)nb.onclick=()=>{P.myGroup=nx;P.group=nx;store.save(P);box.classList.add('hidden');voice.on=GROUPS[nx].voice;$('#voiceBtn').classList.toggle('off',!voice.on);goHome();};
 }
 function renderSetup(first){
   $('#setup').classList.remove('hidden');$('#setupTitle').textContent=first?'누가 할까요?':'내 학년 바꾸기';
-  $('#setupList').innerHTML=['7','8','31','3'].map(g=>`<button class="level ${g===P.myGroup?'on':''}" data-g="${g}"><div><div class="lt display">${GROUPS[g].label}</div><div class="ls">${GROUPS[g].sub}</div></div><div class="dots">${g===P.myGroup?'✔':''}</div></button>`).join('');
+  $('#setupList').innerHTML=ORDER.map(g=>`<button class="level ${g===P.myGroup?'on':''}" data-g="${g}"><div><div class="lt display">${GROUPS[g].label}</div><div class="ls">${GROUPS[g].sub}</div></div><div class="dots">${g===P.myGroup?'✔':''}</div></button>`).join('');
   $('#setupList').querySelectorAll('button').forEach(b=>b.onclick=()=>{P.myGroup=b.dataset.g;P.group=b.dataset.g;store.save(P);$('#setup').classList.add('hidden');voice.on=GROUPS[P.group].voice;$('#voiceBtn').classList.toggle('off',!voice.on);renderHome();audio.tap();});
   $('#setupClose').classList.toggle('hidden',first);
 }
@@ -90,7 +118,7 @@ function renderCard(){
     P.wallet-=CARD_COST;P.cardPlays++;store.save(P);audio.win();setTimeout(renderHome,300);};
 }
 function setGroup(g){P.group=g;voice.on=GROUPS[g].voice;$('#voiceBtn').classList.toggle('off',!voice.on);store.save(P);renderHome();audio.tap();}
-function startMode(id){if(!isY()&&LEVELS[id])return showLevels(id);startRound(id,null);}
+function startMode(id){if(!isY()&&LEVELS[id]&&!GEN_EXT[P.group])return showLevels(id);startRound(id,null);}
 function showLevels(id){const m=modeInfo(id);$('#levelTitle').textContent=m.icon+' '+m.title;
   $('#levelDesc').textContent=id==='speed'?'60초 동안 몇 문제를 맞힐 수 있을까요? 5문제=별 1개, 10문제=별 2개, 15문제=별 3개':'먼저 직접 만들어 본 다음 문제를 풀면 더 쉬워요.';
   $('#levelList').innerHTML=LEVELS[id].map(l=>`<button class="level" onclick="pickLevel('${id}','${l.id}')"><div><div class="lt display">${l.t}</div><div class="ls">${l.s}</div></div><div class="dots">${l.d}</div></button>`).join('');
@@ -124,7 +152,7 @@ function nextQuestion(){
   const hard=S.mode!=='speed'&&isHardIdx(S.i,S.total);
   let q;
   if(isY())q=hard&&HARDY[S.mode]?HARDY[S.mode]():GENY[S.mode]();
-  else if(S.group==='31')q=GEN31[S.mode](S.i,hard);
+  else if(GEN_EXT[S.group])q=GEN_EXT[S.group]()[S.mode](S.i,hard);
   else q=hard&&HARD3[S.mode]?HARD3[S.mode](S.i):GEN3[S.mode](S.level,S.i);
   q=normalize(q);q.hard=hard;
   S.q=q;S.answered=false;S.fields={};S.active=null;S.cells=new Set();
@@ -255,7 +283,7 @@ function advance(){clearTimeout(S.autoTimer);if(!S.answered)return;S.i++;nextQue
 /* 결과 */
 function endRound(){
   stopTimer();
-  const speed=S.mode==='speed',young=S.group==='7'||S.group==='8';
+  const speed=S.mode==='speed',young=GROUPS[S.group].total===8;
   const score=speed?S.correct:young?S.correct:S.correct*10;
   const stars=speed?(S.correct>=15?3:S.correct>=10?2:S.correct>=5?1:0):young?(score>=8?3:score>=6?2:score>=4?1:0):(score>=90?3:score>=70?2:score>=40?1:0);
   const d=P.done[S.group]=P.done[S.group]||{};const p=d[S.mode]=d[S.mode]||{};
@@ -267,7 +295,7 @@ function endRound(){
   const finished=speed?S.timeLeft<=0:S.i>=S.total;
   let earn=stars;const bonus=[];
   if(finished&&earn<1){earn=1;bonus.push('끝까지 풀기 +1');}
-  if(S.hardOk>=2){earn+=1;bonus.push('심화 2문제 성공 +1');}
+  if(S.hardOk>=2){earn+=1;bonus.push(`심화 ${S.hardOk}문제 성공 +1`);}
   if(newRecord){earn+=1;bonus.push('최고 기록 갱신 +1');}
   let why='';
   if(S.group!==P.myGroup){earn=0;why=`연습 모드 — 내 학년(${GROUPS[P.myGroup].label})이 아니에요`;}
@@ -275,6 +303,11 @@ function endRound(){
   else if(dy.earned>=DAILY_CAP){earn=0;why=`오늘 별 ${DAILY_CAP}개를 다 모았어요! 내일 또 만나요`;}
   else if(dy.earned+earn>DAILY_CAP){earn=DAILY_CAP-dy.earned;why=`하루 상한 ${DAILY_CAP}개에 맞춰 ${earn}개만 받았어요`;}
   dy.earned+=earn;P.wallet+=earn;
+  // ── 졸업 판정: 이 학년 모든 단원 ⭐3 ──
+  P.grad=P.grad||{};
+  const gp=gradProgress(S.group);
+  const gradNow=gp.n===gp.total&&!P.grad[S.group];
+  if(gradNow)P.grad[S.group]=today();
   store.save(P);
   const m=modeInfo(S.mode);const g=GROUPS[S.group];
   const title=stars===3?'참 잘했어요!':stars===2?'잘했어요!':stars===1?'좋아요, 조금만 더!':'다시 해 볼까요?';
@@ -285,10 +318,12 @@ function endRound(){
     <div class="bigstars">${[1,2,3].map(k=>`<span class="${stars>=k?'':'off'}">⭐</span>`).join('')}</div>
     ${newSt?`<div class="newst">새 스티커를 받았어요!<b>${newSt}</b></div>`:''}
     <div class="walletline">${earn?`⭐ 별 <b>${earn}</b>개 획득! `:''}${bonus.length&&earn?`<span class="bonus">${bonus.join(' · ')}</span> `:''}${why?`<span class="why">${why}</span> `:''}<br>모은 별 <b>${P.wallet}</b>개 · 오늘 ${dy.earned}/${DAILY_CAP} · 카드놀이 <b>${cardPlays()}</b>판 가능${cardPlays()?' 🎟️':''}</div>
+    <div class="gradline">${P.grad[S.group]?`🎓 ${GROUPS[S.group].sub} 졸업!`:`🎓 별 3개 단원 <b>${gp.n}</b> / ${gp.total} — 모두 채우면 졸업장!`}</div>
     <div class="stat"><span>${speed?'맞힌 문제':young?'맞힌 문제':'점수'}<b>${speed?S.correct+'문제':young?S.correct+' / '+S.total:score+'점'}</b></span><span>최고 콤보<b>${S.maxCombo}</b></span><span>최고 기록<b>${p.best}${unit}</b></span></div>
     <div class="row" style="justify-content:center"><button class="btn ghost" onclick="goHome()">홈으로</button><button class="btn blue" onclick="startRound('${S.mode}',${S.level?`'${S.level}'`:'null'})">다시 하기</button></div>`;
   if(stars>=2)audio.win();voice.say(title+(newSt?' 새 스티커를 받았어요!':''));
   show('result');
+  if(gradNow)setTimeout(()=>showGrad(S.group),900);
 }
 
 /* ───────── 분수 실험실 ───────── */
