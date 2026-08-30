@@ -29,7 +29,7 @@ const MODES_Y=[
   {id:'clock',icon:'🕐',title:'시계 보기',s7:'몇 시',s8:'몇 시 30분'},
 ];
 const MODES_3=[
-  {id:'speed',icon:'⚡',title:'스피드 연산',sub:'곱셈 · 나눗셈 · 60초 도전',badge:'3-2',cls:'g'},
+  {id:'speed',icon:'⚡',title:'스피드 연산',sub:'곱셈 · 나눗셈 · 80초 도전',badge:'3-2',cls:'g'},
   {id:'frac',icon:'🍕',title:'분수 실험실',sub:'진분수 · 가분수 · 대분수',badge:'3-2',cls:'g'},
   {id:'unit',icon:'⚖️',title:'들이와 무게',sub:'L · mL · kg · g',badge:'3-2',cls:'g'},
   {id:'bignum',icon:'🔢',title:'큰 수 읽기',sub:'만 · 억 · 조 · 자릿값',badge:'4-1 선행',cls:'p'},
@@ -120,7 +120,7 @@ function renderCard(){
 function setGroup(g){P.group=g;voice.on=GROUPS[g].voice;$('#voiceBtn').classList.toggle('off',!voice.on);store.save(P);renderHome();audio.tap();}
 function startMode(id){if(!isY()&&LEVELS[id]&&!GEN_EXT[P.group])return showLevels(id);startRound(id,null);}
 function showLevels(id){const m=modeInfo(id);$('#levelTitle').textContent=m.icon+' '+m.title;
-  $('#levelDesc').textContent=id==='speed'?'60초 동안 몇 문제를 맞힐 수 있을까요? 5문제=별 1개, 10문제=별 2개, 15문제=별 3개':'먼저 직접 만들어 본 다음 문제를 풀면 더 쉬워요.';
+  $('#levelDesc').textContent=id==='speed'?'80초 동안 몇 문제를 맞힐 수 있을까요? 5문제=별 1개, 10문제=별 2개, 15문제=별 3개':'먼저 직접 만들어 본 다음 문제를 풀면 더 쉬워요.';
   $('#levelList').innerHTML=LEVELS[id].map(l=>`<button class="level" onclick="pickLevel('${id}','${l.id}')"><div><div class="lt display">${l.t}</div><div class="ls">${l.s}</div></div><div class="dots">${l.d}</div></button>`).join('');
   show('levels');}
 function pickLevel(id,lv){if(id==='frac'&&lv==='lab')return openLab();startRound(id,lv);}
@@ -129,12 +129,12 @@ function pickLevel(id,lv){if(id==='frac'&&lv==='lab')return openLab();startRound
 let S={};
 function startRound(mode,level){
   stopTimer();
-  S={group:P.group,mode,level,i:0,total:mode==='speed'?Infinity:GROUPS[P.group].total,correct:0,answeredCount:0,combo:0,maxCombo:0,q:null,answered:false,fields:{},active:null,cells:new Set(),timeLeft:60,log:[],hardOk:0};
+  S={group:P.group,mode,level,i:0,total:mode==='speed'?Infinity:GROUPS[P.group].total,correct:0,answeredCount:0,combo:0,maxCombo:0,q:null,answered:false,fields:{},active:null,cells:new Set(),timeLeft:80,log:[],hardOk:0};
   $('#timer').classList.toggle('hidden',mode!=='speed');
   if(mode==='speed')startTimer();
   nextQuestion();show('play');
 }
-function startTimer(){S.timeLeft=60;$('#timer').textContent=60;$('#timer').classList.remove('hurry');
+function startTimer(){S.timeLeft=80;$('#timer').textContent=80;$('#timer').classList.remove('hurry');
   S.timer=setInterval(()=>{S.timeLeft--;$('#timer').textContent=S.timeLeft;if(S.timeLeft<=10)$('#timer').classList.add('hurry');if(S.timeLeft<=0){stopTimer();endRound();}},1000);}
 function stopTimer(){if(S.timer){clearInterval(S.timer);S.timer=null;}clearTimeout(S.autoTimer);}
 
