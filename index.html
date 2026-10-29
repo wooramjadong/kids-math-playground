@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>수학 놀이터 — 수학 · 영어 · 카드놀이</title>
 <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=9">
+<link rel="stylesheet" href="style.css?v=20261029">
 </head>
 <body>
 
@@ -13,11 +13,12 @@
   <div class="brand display">수학 놀이터</div>
   <div class="spacer"></div>
   <div class="agetog" id="groupTog">
-    <button data-g="7">7세<br><small style="font-weight:400">입학 준비</small></button>
-    <button data-g="8">8세<br><small style="font-weight:400">1-1</small></button>
-    <button data-g="82">1-2<br><small style="font-weight:400">1학년 2학기</small></button>
+    <button data-g="11">1-1<br><small style="font-weight:400">1학년 1학기</small></button>
+    <button data-g="12">1-2<br><small style="font-weight:400">1학년 2학기</small></button>
+    <button data-g="21">2-1<br><small style="font-weight:400">2학년 1학기</small></button>
+    <button data-g="22">2-2<br><small style="font-weight:400">2학년 2학기</small></button>
     <button data-g="31">3-1<br><small style="font-weight:400">3학년 1학기</small></button>
-    <button data-g="3">3-2<br><small style="font-weight:400">3학년 2학기</small></button>
+    <button data-g="32">3-2<br><small style="font-weight:400">3학년 2학기</small></button>
     <button data-g="41">4-1<br><small style="font-weight:400">4학년 1학기</small></button>
     <button data-g="42">4-2<br><small style="font-weight:400">4학년 2학기</small></button>
   </div>
@@ -47,20 +48,10 @@
     <div class="modes" id="modes"></div>
   </section>
 
-  <section id="levels" class="screen hidden">
-    <button class="back" onclick="goHome()">← 홈으로</button>
-    <div class="card" style="margin-top:8px">
-      <h2 class="display" id="levelTitle" style="margin:0;font-size:30px"></h2>
-      <p id="levelDesc" style="color:var(--ink-soft);margin:4px 0 0;font-size:14px"></p>
-      <div class="levels" id="levelList"></div>
-    </div>
-  </section>
-
   <section id="play" class="screen hidden">
     <div class="playbar">
       <button class="back" onclick="confirmHome()">← 그만</button>
       <div class="progress" id="progress"></div>
-      <div class="timer hidden" id="timer">60</div>
       <div class="combo" id="combo"></div>
     </div>
     <div class="card qcard" id="qcard">
@@ -76,38 +67,22 @@
   <section id="result" class="screen hidden">
     <div class="card result" id="resultCard"></div>
   </section>
-
-  <section id="lab" class="screen hidden">
-    <button class="back" onclick="showLevels('frac')">← 뒤로</button>
-    <div class="card lab" style="margin-top:8px">
-      <h2 class="display" style="margin:0 0 4px;font-size:30px">분수 실험실 · 직접 만들기</h2>
-      <p style="margin:0;color:var(--ink-soft);font-size:14px">분모와 분자를 바꿔 보면서 조각이 어떻게 변하는지 살펴보세요.</p>
-      <div class="controls">
-        <label>분모 <input type="range" id="labD" min="1" max="12" value="4"> <span class="val" id="labDv">4</span></label>
-        <label>분자 <input type="range" id="labN" min="0" max="16" value="3"> <span class="val" id="labNv">3</span></label>
-        <div class="seg"><button class="on" data-shape="pie">🍕 원</button><button data-shape="bar">🍫 막대</button></div>
-      </div>
-      <div class="visual" id="labVisual"></div>
-      <div class="rep" id="labRep"></div>
-      <div class="read" id="labRead"></div>
-    </div>
-  </section>
 </main>
 
-<script src="js/1-helpers.js?v=4"></script>
-<script src="js/2-gen-young.js?v=4"></script>
-<script src="js/3-gen-3-2.js?v=4"></script>
-<script src="js/4-gen-3-1-hard.js?v=4"></script>
-<script src="js/4b-expansion.js?v=1"></script>
-<script src="js/5-engine.js?v=6"></script>
+<script src="js/1-helpers.js?v=20261029"></script>
+<script src="js/3-gen-3-2.js?v=20261029"></script>
+<script src="js/4-gen-3-1-hard.js?v=20261029"></script>
+<script src="js/4b-expansion.js?v=20261029"></script>
+<script src="js/4c-cur-12.js?v=20261029"></script>
+<script src="js/4d-cur-34.js?v=20261029"></script>
+<script src="js/5-engine.js?v=20261029"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="js/6-hub.js?v=2"></script>
-<script src="js/7-sync.js?v=1"></script>
-<script src="js/8-cloud.js?v=1"></script>
-<script src="js/9-seven-boost.js?v=1"></script>
+<script src="js/7-sync.js?v=20261029"></script>
+<script src="js/8-cloud.js?v=20261029"></script>
 <script src="js/10-voice.js?v=2"></script>
 <script src="js/11-cloudtts.js?v=1"></script>
 <script src="js/12-ticket.js?v=1"></script>
-<script src="js/13-word.js?v=1"></script>
+<script src="js/13-word.js?v=20261029"></script>
 </body>
 </html>

@@ -262,3 +262,14 @@ main{max-width:720px;margin:0 auto;padding:16px 14px 44px}
 .livestat .hit{color:var(--green)}
 @media(max-width:480px){.gridbox{grid-template-columns:repeat(6,40px)}.cell{width:40px;height:40px}.eq{font-size:32px}.prompt{font-size:20px}}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition:none!important}}
+
+/* 난이도 하·중·상 표시 (2026-10) */
+.tag.lvchip{font-weight:800;letter-spacing:.5px}
+.lv-low{background:#DCFCE7!important;color:#166534!important}
+.lv-mid{background:#DBEAFE!important;color:#1E40AF!important}
+.lv-high{background:#FEE2E2!important;color:#B91C1C!important}
+.lvline{font-size:13px;color:var(--ink-soft);margin-left:6px}
+.lvc{display:inline-block;padding:1px 7px;border-radius:999px;font-size:12px}/* 8개 학기 버튼이 한 줄에 들어가도록 */
+.agetog{overflow-x:auto;scrollbar-width:none}.agetog::-webkit-scrollbar{display:none}
+.agetog button{flex:none}
+@media(max-width:1400px){.agetog button small{display:none}.agetog button{padding:8px 10px;font-size:15px}}
