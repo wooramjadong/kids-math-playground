@@ -3,7 +3,7 @@
    - 전체가 아니라 확률(WORD_RATE)로 섞여요.
    - 7·8세는 아주 짧고 쉬운 문장(그림 상황) 위주, 학년이 올라갈수록 문장이 길어져요.
    - 기존 생성기를 감싸는 방식이라, 문장제가 안 나오면 원래 문제가 그대로 나와요. */
-const WORD_RATE = { '7':0.30, '8':0.35, '82':0.40, '31':0.45, '3':0.45, '41':0.45, '42':0.45 };
+const WORD_RATE = { '11':0.3, '12':0.3, '21':0.3, '22':0.3, '31':0.3, '32':0.3, '41':0.3, '42':0.3 }; // '중' 문제 중 이 비율만큼 문장제로
 
 /* 소재(주어·물건·단위) 풀 — 아이에게 친숙한 것들 */
 const WN = {
@@ -77,50 +77,57 @@ const WORD = {
     const each=rnd(12,24), ppl=rnd(3,9); const tot=each*ppl;
     return wq('이야기 나눗셈', `사탕 ${tot}개를 ${ppl}봉지에 똑같이 나누어 담으면 한 봉지에 몇 개씩 담길까요?`, each, '개', `${tot} ÷ ${ppl} = ${each}`); },
   // 4-2 소수 덧셈뺄셈
+  // 2학년: 받아올림·받아내림 있는 두 자리 수, 묶어 세기
+  add2(){ const a=rnd(25,68), b=rnd(15,39);
+    return wq('이야기 덧셈', `도서관에 동화책이 ${a}권, 위인전이 ${b}권 있어요. 책은 모두 몇 권일까요?`, a+b, '권', `${a} + ${b} = ${a+b}`); },
+  sub2(){ const a=rnd(42,95), b=rnd(15,a-10);
+    return wq('이야기 뺄셈', `색종이 ${a}장 중에서 ${b}장을 사용했어요. 남은 색종이는 몇 장일까요?`, a-b, '장', `${a} − ${b} = ${a-b}`); },
+  two(){ const a1=rnd(1,5),b1=rnd(1,9-a1-1),a0=rnd(0,5),b0=rnd(0,9-a0),a=a1*10+a0,b=b1*10+b0;
+    return wq('이야기 덧셈', `${iga(wWho())} 구슬을 ${a}개 가지고 있었는데 ${b}개를 더 받았어요. 구슬은 모두 몇 개일까요?`, a+b, '개', `${a} + ${b} = ${a+b}`); },
+  mulSmall(){ const per=rnd(2,5), cnt=rnd(2,5);
+    return wq('이야기 곱셈', `한 접시에 쿠키가 ${per}개씩 ${cnt}접시 있어요. 쿠키는 모두 몇 개일까요?`, per*cnt, '개', `${per} × ${cnt} = ${per*cnt}`); },
+  // 3학년: (두 자리)×(한 자리), (세 자리)×(한 자리), (두 자리)÷(한 자리)
+  mul21(){ const per=rnd(12,48), cnt=rnd(2,9);
+    return wq('이야기 곱셈', `한 상자에 귤이 ${per}개씩 들어 있어요. ${cnt}상자에 든 귤은 모두 몇 개일까요?`, per*cnt, '개', `${per} × ${cnt} = ${per*cnt}`); },
+  mul31(){ const per=rnd(105,399), cnt=rnd(2,9);
+    return wq('이야기 곱셈', `${iga(wWho())} 하루에 ${per}걸음씩 ${cnt}일 동안 걸었어요. 모두 몇 걸음을 걸었을까요?`, per*cnt, '걸음', `${per} × ${cnt} = ${per*cnt}`); },
+  div2(){ const ppl=rnd(2,6), each=rnd(12,Math.floor(96/ppl)); const tot=ppl*each;
+    return wq('이야기 나눗셈', `색연필 ${tot}자루를 ${ppl}명에게 똑같이 나누어 주면 한 명이 몇 자루씩 받을까요?`, each, '자루', `${tot} ÷ ${ppl} = ${each}`); },
+  // 4학년: 분모가 같은 분수의 덧셈
+  frac(){ const d=rnd(5,9), a=rnd(1,d-3), b=rnd(1,d-1-a);
+    return { tag:'📖 이야기 분수', prompt:`피자 한 판을 똑같이 ${d}조각으로 나누었어요. 형이 ${a}조각, 동생이 ${b}조각을 먹었다면 두 사람이 먹은 피자는 전체의 얼마일까요?`, input:{type:'frac',fields:['n','d']}, check:v=>v.d>0&&v.n*d===(a+b)*v.d, solHTML:fracHTML(a+b,d), explain:`${a}/${d} + ${b}/${d} = ${a+b}/${d}`, _word:true }; },
   dec(){ const f=x=>Math.round(x*10)/10; const a=f(rnd(15,89)/10), b=f(rnd(10,Math.round(a*10)-5)/10);
     if (Math.random()<0.5) return { tag:'📖 이야기 소수', prompt:`끈이 ${a} m 있었는데 ${b} m를 사용했어요. 남은 끈은 몇 m일까요?`, input:{type:'num',decimal:true}, ans:f(a-b), solText:String(f(a-b)), explain:`${a} − ${b} = ${f(a-b)}`, _word:true };
     const c=f(rnd(10,70)/10); return { tag:'📖 이야기 소수', prompt:`물을 아침에 ${a} L, 저녁에 ${c} L 마셨어요. 하루 동안 마신 물은 모두 몇 L일까요?`, input:{type:'num',decimal:true}, ans:f(a+c), solText:String(f(a+c)), explain:`${a} + ${c} = ${f(a+c)}`, _word:true };
   },
 };
 
-/* 어떤 모드에 어떤 문장제를 쓸지 매핑 (그룹별) */
+/* 어떤 단원에 어떤 문장제를 쓸지 (학기별) */
 const WORD_MAP = {
-  '7':  { addsub:g=>WORD.addsub('7') },
-  '8':  { addsub:g=>WORD.addsub('8') },
-  '82': { carry:()=>WORD.carry(), borrow:()=>WORD.borrow(), three:()=>WORD.addsub('8') },
-  '31': { addsub:()=>Math.random()<.5?WORD.add3():WORD.sub3(), mul:()=>WORD.mul('31'), div:()=>WORD.div() },
-  '3':  { speed:()=>Math.random()<.5?WORD.mul('3'):WORD.div() },   // 스피드는 제외(아래에서 막음)하지만 frac 등 대비
+  '11': { addsub:()=>WORD.addsub('7') },
+  '12': { three:()=>WORD.addsub('8'), addsub2:()=>Math.random()<.5?WORD.carry():WORD.borrow(), addsub3:()=>WORD.two() },
+  '21': { addsub:()=>Math.random()<.5?WORD.add2():WORD.sub2(), mul:()=>WORD.mulSmall() },
+  '22': { times:()=>WORD.mul('3') },
+  '31': { addsub:()=>Math.random()<.5?WORD.add3():WORD.sub3(), mul:()=>WORD.mul21(), div:()=>WORD.div() },
+  '32': { mul:()=>WORD.mul31(), div:()=>WORD.div2() },
   '41': { muldiv:()=>WORD.muldiv() },
-  '42': { dec:()=>WORD.dec(), fracadd:()=>WORD.dec() },
+  '42': { dec:()=>WORD.dec(), fracadd:()=>WORD.frac() },
 };
 
-/* nextQuestion을 감싸서, 조건이 맞으면 서술형으로 교체 */
+/* nextQuestion을 감싸서, '중' 문제 일부를 서술형으로 바꿔요 ('하'·'상'은 그대로) */
 (function(){
   if (typeof nextQuestion !== 'function') return;
   const _next = nextQuestion;
   nextQuestion = function(){
     _next(); // 원래 문제 먼저 생성 (S.q 세팅)
     try{
-      if (!S || !S.q || S.mode==='speed') return;   // 스피드전(시간제한)은 문장 길어 부적합 → 제외
-      if (S.q.hard) return;                          // 심화 칸은 기존 심화 유지
+      if (!S || !S.q || S.q.lv !== 'mid') return;
       const map = WORD_MAP[S.group]; if (!map) return;
       const maker = map[S.mode]; if (!maker) return;
-      const rate = WORD_RATE[S.group] || 0;
-      if (Math.random() >= rate) return;             // 확률적으로만 교체
-      const wqObj = maker();
-      if (!wqObj) return;
-      // S.q 교체 후 화면 다시 그리기 (엔진의 렌더 로직과 동일한 부분만)
-      const q = normalize(wqObj); q.hard = false; S.q = q;
-      S.answered=false; S.fields={}; S.active=null; S.cells=new Set();
-      const m = modeInfo(S.mode);
-      $('#tagline').innerHTML = `<span class="tag">${m.icon} ${q.tag||m.title}</span>`;
-      $('#qcard').classList.remove('hardcard');
-      $('#prompt').innerHTML = q.prompt||'';
-      $('#visual').innerHTML = (q.eqHTML?`<div class="eq">${q.eqHTML}</div>`:'') + (q.visual||'');
-      $('#visual').style.display = $('#visual').innerHTML ? '' : 'none';
-      $('#feedback').innerHTML='';
-      renderInput(q.input);
-      if (q.prompt) voice.say(q.prompt);            // 서술형은 특히 읽어주기가 중요
+      if (Math.random() >= (WORD_RATE[S.group] || 0)) return;
+      const wqObj = maker(); if (!wqObj) return;
+      const q = normalize(wqObj); q.lv = 'mid'; q.hard = false;
+      renderQuestion(q);
     }catch(e){/* 문제가 있으면 원래 문제 그대로 둠 */}
   };
 })();

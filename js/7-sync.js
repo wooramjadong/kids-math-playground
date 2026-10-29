@@ -1,12 +1,12 @@
 /* ───────── 다른 기기와 연결 (기록 옮기기) ─────────
    서버 없이 동작: 기록 전체를 링크(#sync=…)와 QR 코드로 만들어 다른 기기에서 열면 그대로 복사돼요. */
-const SYNC_KEYS=['wallet','cardPlays','myGroup','daily','done','stickers','setupDone','group'];
+const SYNC_KEYS=['wallet','cardPlays','myGroup','daily','done','stickers','setupDone','group','grad','resetV'];
 const b64e=s=>btoa(unescape(encodeURIComponent(s))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 const b64d=s=>decodeURIComponent(escape(atob(s.replace(/-/g,'+').replace(/_/g,'/')+'==='.slice((s.length+3)%4))));
 function syncPack(){const o={};SYNC_KEYS.forEach(k=>{if(P[k]!==undefined)o[k]=P[k];});o.stickers=(P.stickers||[]).slice(-40);o.t=Date.now();return b64e(JSON.stringify(o));}
 function syncLink(){return location.origin+location.pathname+'#sync='+syncPack();}
 function syncParse(txt){const m=String(txt||'').trim().match(/#?sync=([A-Za-z0-9_\-]+)/);const code=m?m[1]:String(txt||'').trim();try{const o=JSON.parse(b64d(code));if(typeof o.wallet!=='number')throw 0;return o;}catch(e){return null;}}
-function syncApply(o){SYNC_KEYS.forEach(k=>{if(o[k]!==undefined)P[k]=o[k];});if(!GROUPS[P.group])P.group='7';if(!GROUPS[P.myGroup])P.myGroup=P.group;store.save(P);
+function syncApply(o){SYNC_KEYS.forEach(k=>{if(o[k]!==undefined)P[k]=o[k];});fixGroups(P);if(o.resetV!==RESET_V){P.resetV=null;applyReset(P);P.news=false;}store.save(P);
   voice.on=GROUPS[P.group].voice;$('#voiceBtn').classList.toggle('off',!voice.on);renderHome();audio.win();}
 
 function renderSync(){
