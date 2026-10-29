@@ -63,7 +63,7 @@ const GEN31={
     if(hard){const t=pick(['digit','cmp','two']);
       if(t==='digit'){const a=rnd(2,4),d=rnd(1,9),b=rnd(3,9);const n=a*10+d;return {tag:'곱셈 심화',prompt:'□ 안에 알맞은 숫자를 쓰세요.',eqHTML:`${a}<span class="q">□</span> × ${b} = ${n*b}`,input:{type:'num'},ans:d,explain:`${n*b} ÷ ${b} = ${n} 이므로 □는 ${d}`};}
       if(t==='cmp'){const a=rnd(12,49),b=rnd(2,9);const x=a*b+pick([-20,-5,5,20]);const ans=cmpAns(a*b,x);return {tag:'곱의 크기 비교',prompt:'○ 안에 알맞은 것을 고르세요.',eqHTML:`${a} × ${b} <span class="op">○</span> ${x}`,input:{type:'choice',options:['>','<'],big:true},check:v=>v===ans,sol:ans,explain:`${a} × ${b} = ${a*b}`};}
-      const a=rnd(12,30),b=rnd(2,5),c=rnd(10,40);return {tag:'두 단계 문장제',prompt:`한 상자에 사과가 ${a}개씩 ${b}상자 있어요. 그중 ${c}개를 먹었다면 남은 사과는?`,input:{type:'num',unit:'개'},ans:a*b-c,explain:`${a} × ${b} = ${a*b}, ${a*b} − ${c} = ${a*b-c}`};}
+      const a=rnd(12,30),b=rnd(2,5),c=rnd(10,Math.min(40,a*b-5));return {tag:'두 단계 문장제',prompt:`한 상자에 사과가 ${a}개씩 ${b}상자 있어요. 그중 ${c}개를 먹었다면 남은 사과는?`,input:{type:'num',unit:'개'},ans:a*b-c,explain:`${a} × ${b} = ${a*b}, ${a*b} − ${c} = ${a*b-c}`};}
     const a=rnd(12,49),b=rnd(2,9);
     if(Math.random()<.6)return {tag:'(두 자리)×(한 자리)',prompt:'계산해 보세요.',eqHTML:`${a} × ${b} =`,input:{type:'num'},ans:a*b,explain:`일의 자리 ${a%10} × ${b} = ${(a%10)*b}, 십의 자리 ${Math.floor(a/10)}0 × ${b} = ${Math.floor(a/10)*10*b}. 더하면 ${a*b}`};
     return {tag:'곱셈 문장제',prompt:`한 줄에 ${a}명씩 ${b}줄로 섰어요. 모두 몇 명일까요?`,input:{type:'num',unit:'명'},ans:a*b,explain:`${a} × ${b} = ${a*b}`};},

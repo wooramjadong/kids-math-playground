@@ -8,11 +8,23 @@ const fmt=n=>Number(n).toLocaleString('ko-KR');
 const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 const cmpAns=(a,b)=>a>b?'>':'<';
 const store={load(){try{return JSON.parse(localStorage.getItem('mathplay-all-v1')||'{}')}catch(e){return {}}},save(d){try{localStorage.setItem('mathplay-all-v1',JSON.stringify(d))}catch(e){}}};
-let P=store.load();P.group=P.group||'7';P.stickers=P.stickers||[];P.done=P.done||{};P.cardPlays=P.cardPlays||0;
-const DAILY_CAP=10,SAME_LIMIT=2; // 하루 별 상한, 같은 단원 보상 횟수(3번째부터 보상 없음)
-const today=()=>new Date().toISOString().slice(0,10);
-function daily(){if(!P.daily||P.daily.d!==today())P.daily={d:today(),earned:0,plays:{}};return P.daily;}
-if(P.wallet==null)P.wallet=Object.values(P.done).reduce((a,o)=>a+Object.values(o).reduce((b,p)=>b+(p.stars||0),0),0);
+let P=store.load();P.group=P.group||'11';P.stickers=P.stickers||[];P.done=P.done||{};P.cardPlays=P.cardPlays||0;
+const DAILY_CAP=6,SAME_LIMIT=1; // 하루 별 상한 6개, 같은 단원은 하루 1번만 별
+const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}; // 현지 날짜 기준
+function daily(){if(!P.daily||P.daily.d!==today())P.daily={d:today(),earned:0,plays:{},got:{}};P.daily.got=P.daily.got||{};return P.daily;}
+/* 학기 번호 바뀜(2026-10): 7세·8세 → 1-1, 82 → 1-2, 3 → 3-2 */
+const GROUP_MIGRATE={'7':'11','8':'11','82':'12','3':'32'},VALID_G=['11','12','21','22','31','32','41','42'];
+function fixGroups(o){o=o||P;if(GROUP_MIGRATE[o.group])o.group=GROUP_MIGRATE[o.group];if(GROUP_MIGRATE[o.myGroup])o.myGroup=GROUP_MIGRATE[o.myGroup];
+  if(!VALID_G.includes(o.group))o.group='11';if(!VALID_G.includes(o.myGroup))o.myGroup=o.group;}
+/* 새 교육과정·새 별 규칙 적용: 모은 별을 한 번만 0으로 (스티커·카드놀이 횟수는 그대로, 예전 단원 기록은 doneOld로 보관) */
+const RESET_V='2026-10-29';
+function applyReset(o){if(o.resetV===RESET_V)return false;
+  if(o.done&&Object.keys(o.done).length)o.doneOld=o.done;if(o.grad&&Object.keys(o.grad).length)o.gradOld=o.grad;
+  const had=!!(o.wallet||Object.keys(o.done||{}).length||(o.stickers||[]).length);
+  o.wallet=0;o.daily=null;o.done={};o.grad={};o.resetV=RESET_V;o.news=had;fixGroups(o);return true;}
+if(applyReset(P))store.save(P);
+fixGroups(P);
+if(P.wallet==null)P.wallet=0;
 const CARD_URL='https://siwon-card-nori.vercel.app/',CARD_COST=5;
 const cardPlays=()=>Math.floor(P.wallet/CARD_COST);
 const age=()=>P.group;

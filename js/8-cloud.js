@@ -14,8 +14,8 @@ const CLOUD={api:'api/state',pushTimer:null,pulling:false,status:'',last:0,
     }catch(e){this.status='offline';}finally{this.pulling=false;renderCloudBadge();}
   },
   applyRemote(s){const fam=P.family;SYNC_KEYS.forEach(k=>{if(s[k]!==undefined)P[k]=s[k];});P.t=s.t||Date.now();P.family=fam;
-    if(!GROUPS[P.group])P.group='7';if(!GROUPS[P.myGroup])P.myGroup=P.group;
-    _storeSaveRaw(P);voice.on=GROUPS[P.group].voice;$('#voiceBtn').classList.toggle('off',!voice.on);
+    fixGroups(P);const stale=s.resetV!==RESET_V;if(stale){P.resetV=null;applyReset(P);P.news=false;}
+    if(stale)store.save(P);else _storeSaveRaw(P);voice.on=GROUPS[P.group].voice;$('#voiceBtn').classList.toggle('off',!voice.on);
     if(!$('#home').classList.contains('hidden'))renderHome();},
   schedulePush(){if(!this.on())return;clearTimeout(this.pushTimer);this.pushTimer=setTimeout(()=>this.push(),700);},
   async push(){
