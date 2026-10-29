@@ -272,4 +272,4 @@ main{max-width:720px;margin:0 auto;padding:16px 14px 44px}
 .lvc{display:inline-block;padding:1px 7px;border-radius:999px;font-size:12px}/* 8개 학기 버튼이 한 줄에 들어가도록 */
 .agetog{overflow-x:auto;scrollbar-width:none}.agetog::-webkit-scrollbar{display:none}
 .agetog button{flex:none}
-@media(max-width:1400px){.agetog button small{display:none}.agetog button{padding:8px 10px;font-size:15px}}
+.agetog button small{display:none}.agetog button{padding:8px 10px;font-size:15px}
