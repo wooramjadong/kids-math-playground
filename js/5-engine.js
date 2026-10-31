@@ -37,11 +37,15 @@ function renderHome(){
  const dy=daily();$('#totalStars').textContent=P.wallet;renderCard();
  const clear=Object.values(r.steps).filter(x=>x.complete).length;
  $('#eligible').innerHTML=(mine?'<span class="ok">내 학기 · 오늘 별 '+dy.earned+' / '+DAILY_CAP+'</span>':'<span class="warn">다른 학기 연습: 별·진도는 바뀌지 않아요</span>')+'<span class="hint">'+STAR_RULE+' · 같은 단계는 하루 1번만 별</span><span class="hint">단계 완료 '+clear+' / 12 · '+(r.level>12?'학기 완료':'연습 후 도전 2회: 80점 이상, 상 6/8 이상 (12단계는 90점)')+'</span>';
- $('#modes').innerHTML=Array.from({length:12},(_,i)=>{
-  const n=i+1,info=STAGE_SYSTEM.meta(P.group,n),st=STAGE_SYSTEM.step(P,P.group,n),locked=mine&&n>r.level;
+ const stageCard=n=>{
+  const info=STAGE_SYSTEM.meta(P.group,n),st=STAGE_SYSTEM.step(P,P.group,n),locked=mine&&n>r.level;
   const state=st.complete?'완료':locked?'앞 단계를 통과하면 열려요':mine&&n===r.level?STAGE_SYSTEM.phase(P,P.group,n):'진도 없는 복습';
   return '<button class="mode stage-card '+(st.complete?'stage-done':mine&&n===r.level?'stage-current':'')+'" '+(locked?'disabled':'')+' onclick="startStage('+n+')"><span class="stage-number">'+n+'단계</span><span class="t display">'+info.title+'</span><span class="s">'+info.kind+'</span><span class="stage-state">'+state+'</span>'+(st.best?'<span class="best">최고 '+st.best+'점</span>':'')+'</button>';
- }).join('');
+ };
+ // 홈에는 지금 할 단계 하나만, 나머지는 "전체 12단계 보기"를 눌러야 펼쳐져요
+ $('#modes').innerHTML=stageCard(Math.min(r.level,12));
+ const allSum=$('#stageAllSum');if(allSum)allSum.textContent='📋 전체 12단계 보기 · 완료 '+clear+' / 12';
+ const allList=$('#stageAllList');if(allList)allList.innerHTML=Array.from({length:12},(_,i)=>stageCard(i+1)).join('');
  const units=$('#practiceUnits');if(units)units.innerHTML='<summary>단원만 따로 연습하기 (별·진도 없음)</summary><div class="practice-list">'+CUR[P.group].modes.map(m=>'<button class="btn ghost" onclick="startMode(\''+m.id+'\')">'+m.title+'</button>').join('')+'</div>';
  $('#stickers').innerHTML='<span class="lbl">내 스티커판 ('+P.stickers.length+'개)</span>'+(P.stickers.length?P.stickers.map(t=>'<span class="st">'+t+'</span>').join(''):'<span class="empty">문제를 풀고 첫 스티커를 받아 보세요!</span>');
 }
