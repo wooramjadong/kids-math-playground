@@ -3,7 +3,7 @@
 const CLOUD={api:'api/state',pushTimer:null,pulling:false,status:'',last:0,
   code(){return P.family||'';},
   on(){return !!P.family;},
-  pack(){const o={};SYNC_KEYS.forEach(k=>{if(P[k]!==undefined)o[k]=P[k];});o.stickers=(P.stickers||[]).slice(-60);o.t=P.t||Date.now();return o;},
+  pack(){const o={};SYNC_KEYS.forEach(k=>{if(P[k]!==undefined)o[k]=P[k];});o.stickers=(P.stickers||[]).slice();o.t=P.t||Date.now();return o;},
   async pull(force){
     if(!this.on()||this.pulling)return;this.pulling=true;
     try{const r=await fetch(`${this.api}?code=${this.code()}&_=${Date.now()}`,{cache:'no-store'});

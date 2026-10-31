@@ -16,12 +16,10 @@ function daily(){if(!P.daily||P.daily.d!==today())P.daily={d:today(),earned:0,pl
 const GROUP_MIGRATE={'7':'11','8':'11','82':'12','3':'32'},VALID_G=['11','12','21','22','31','32','41','42'];
 function fixGroups(o){o=o||P;if(GROUP_MIGRATE[o.group])o.group=GROUP_MIGRATE[o.group];if(GROUP_MIGRATE[o.myGroup])o.myGroup=GROUP_MIGRATE[o.myGroup];
   if(!VALID_G.includes(o.group))o.group='11';if(!VALID_G.includes(o.myGroup))o.myGroup=o.group;}
-/* 새 교육과정·새 별 규칙 적용: 모은 별을 한 번만 0으로 (스티커·카드놀이 횟수는 그대로, 예전 단원 기록은 doneOld로 보관) */
+/* 과거 버전 표시는 유지하되, 새 12단계 과정에서는 어떤 기존 기록도 초기화하지 않는다. */
 const RESET_V='2026-10-29';
 function applyReset(o){if(o.resetV===RESET_V)return false;
-  if(o.done&&Object.keys(o.done).length)o.doneOld=o.done;if(o.grad&&Object.keys(o.grad).length)o.gradOld=o.grad;
-  const had=!!(o.wallet||Object.keys(o.done||{}).length||(o.stickers||[]).length);
-  o.wallet=0;o.daily=null;o.done={};o.grad={};o.resetV=RESET_V;o.news=had;fixGroups(o);return true;}
+  o.resetV=RESET_V;fixGroups(o);return true;}
 if(applyReset(P))store.save(P);
 fixGroups(P);
 if(P.wallet==null)P.wallet=0;
