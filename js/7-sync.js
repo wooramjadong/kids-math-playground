@@ -6,7 +6,7 @@ const b64d=s=>decodeURIComponent(escape(atob(s.replace(/-/g,'+').replace(/_/g,'/
 function syncPack(){const o={};SYNC_KEYS.forEach(k=>{if(P[k]!==undefined)o[k]=P[k];});o.stickers=(P.stickers||[]).slice(-40);o.t=Date.now();return b64e(JSON.stringify(o));}
 function syncLink(){return location.origin+location.pathname+'#sync='+syncPack();}
 function syncParse(txt){const m=String(txt||'').trim().match(/#?sync=([A-Za-z0-9_\-]+)/);const code=m?m[1]:String(txt||'').trim();try{const o=JSON.parse(b64d(code));if(typeof o.wallet!=='number')throw 0;return o;}catch(e){return null;}}
-function syncApply(o){SYNC_KEYS.forEach(k=>{if(o[k]!==undefined)P[k]=o[k];});fixGroups(P);if(o.resetV!==RESET_V){P.resetV=null;applyReset(P);P.news=false;}store.save(P);
+function syncApply(o){if(typeof cloudBackup==='function')cloudBackup('QR·링크로 가져오기 전');SYNC_KEYS.forEach(k=>{if(o[k]!==undefined)P[k]=o[k];});fixGroups(P);if(o.resetV!==RESET_V){P.resetV=null;applyReset(P);P.news=false;}store.save(P);
   voice.on=GROUPS[P.group].voice;$('#voiceBtn').classList.toggle('off',!voice.on);renderHome();audio.win();}
 
 function renderSync(){
