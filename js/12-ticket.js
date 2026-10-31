@@ -9,7 +9,7 @@
   function openCard(url){const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove();}
   function addInvite(){
     const body=$('#cardplay .cp-body');if(!body||$('#cardJoin'))return;
-    const box=document.createElement('div');box.id='cardJoin';box.style.cssText='margin-top:10px';
+    const box=document.createElement('div');box.id='cardJoin';box.style.cssText='margin-top:10px;flex:0 0 100%;width:100%;min-width:0;max-width:100%;box-sizing:border-box'; // 카드 칸(플렉스) 폭에 맞춤
     box.innerHTML=`<button class="btn ghost" id="cardJoinBtn" type="button" style="width:100%">🔑 초대코드 입력 <span class="cost">대결 참가 · 별 안 써요</span></button>
       <div id="cardJoinRow" class="${inv.open?'':'hidden'}" style="margin-top:8px">
         <div style="font-size:13px;color:var(--ink-soft);margin-bottom:6px">다른 기기에서 <b>방 만들기</b>를 하면 나오는 <b>4자리 방 코드</b>를 넣어요.</div>
