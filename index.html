@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>수학 놀이터 — 수학 · 영어 · 카드놀이</title>
 <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20261029b">
+<link rel="stylesheet" href="style.css?v=20261031s1">
 </head>
 <body>
 
@@ -43,9 +43,9 @@
       <div class="eligible" id="eligible"></div>
       <div class="stickers" id="stickers"></div>
     </div>
-    <div class="hub" id="hub"></div>
-    <div class="cardplay" id="cardplay"></div>
-    <div class="modes" id="modes"></div>
+
+
+    <section id="stageRoad"><section class="stage-help"><b>20문제씩 차근차근</b><p>현재 범위 15문제 + 앞 단원 응용 5문제. 하 2 · 중 10 · 상 8. 사고력·복습 문제는 풀이를 읽고 직접 다음을 눌러요.</p></section><div class="modes" id="modes"></div><details id="practiceUnits" class="practice-units"></details></section><div class="hub" id="hub"></div><div class="cardplay" id="cardplay"></div>
   </section>
 
   <section id="play" class="screen hidden">
@@ -54,7 +54,7 @@
       <div class="progress" id="progress"></div>
       <div class="combo" id="combo"></div>
     </div>
-    <div class="card qcard" id="qcard">
+    <p id="roundCounter" class="round-counter"></p><div class="card qcard" id="qcard">
       <div id="tagline"></div>
       <div class="prompt"><span class="txt" id="prompt"></span><button class="speak" id="speakBtn" title="다시 읽어주기">🔊</button></div>
       <div class="visual" id="visual"></div>
@@ -69,20 +69,25 @@
   </section>
 </main>
 
-<script src="js/1-helpers.js?v=20261029"></script>
-<script src="js/3-gen-3-2.js?v=20261029"></script>
-<script src="js/4-gen-3-1-hard.js?v=20261029"></script>
-<script src="js/4b-expansion.js?v=20261029"></script>
-<script src="js/4c-cur-12.js?v=20261029"></script>
-<script src="js/4d-cur-34.js?v=20261029"></script>
-<script src="js/5-engine.js?v=20261029"></script>
+<script src="js/1-helpers.js?v=20261031s1"></script>
+<script src="js/3-gen-3-2.js?v=20261031s1"></script>
+<script src="js/4-gen-3-1-hard.js?v=20261031s1"></script>
+<script src="js/4b-expansion.js?v=20261031s1"></script>
+<script src="js/4c-cur-12.js?v=20261031s1"></script>
+<script src="js/4d-cur-34.js?v=20261031s1"></script>
+<script src="js/14-applied-1.js?v=20261031s1"></script>
+<script src="js/14-applied-2.js?v=20261031s1"></script>
+<script src="js/14-applied-3.js?v=20261031s1"></script>
+<script src="js/14-applied-4.js?v=20261031s1"></script>
+<script src="js/15-stages.js?v=20261031s1"></script>
+<script src="js/5-engine.js?v=20261031s1"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="js/6-hub.js?v=2"></script>
-<script src="js/7-sync.js?v=20261031sync2"></script>
-<script src="js/8-cloud.js?v=20261031sync2"></script>
+<script src="js/7-sync.js?v=20261031s2sync"></script>
+<script src="js/8-cloud.js?v=20261031s2sync"></script>
 <script src="js/10-voice.js?v=2"></script>
 <script src="js/11-cloudtts.js?v=1"></script>
 <script src="js/12-ticket.js?v=2"></script>
-<script src="js/13-word.js?v=20261029"></script>
+<!-- 단계별 15+5 출제를 보존하기 위해 예전 문장제 덮어쓰기(13-word)는 불러오지 않아요. -->
 </body>
 </html>
