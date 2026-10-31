@@ -49,7 +49,7 @@ function gradProgress(g){const r=STAGE_SYSTEM.record(P,g);return {n:Object.value
 function renderSetup(first){
   $('#setup').classList.remove('hidden');$('#setupTitle').textContent=first?'누가 할까요?':'내 학년 바꾸기';
   $('#setupList').innerHTML=ORDER.map(g=>`<button class="level ${g===P.myGroup?'on':''}" data-g="${g}"><div><div class="lt display">${GROUPS[g].label}</div><div class="ls">${GROUPS[g].sub}</div></div><div class="dots">${g===P.myGroup?'✔':''}</div></button>`).join('');
-  $('#setupList').querySelectorAll('button').forEach(b=>b.onclick=()=>{P.myGroup=b.dataset.g;P.group=b.dataset.g;store.save(P);$('#setup').classList.add('hidden');voice.on=GROUPS[P.group].voice;$('#voiceBtn').classList.toggle('off',!voice.on);renderHome();audio.tap();});
+  $('#setupList').querySelectorAll('button').forEach(b=>b.onclick=()=>{P.myGroup=b.dataset.g;P.group=b.dataset.g;store.save(P);$('#setup').classList.add('hidden');voice.on=GROUPS[P.group].voice;$('#voiceBtn').classList.toggle('off',!voice.on);goHome();audio.tap();});
   $('#setupClose').classList.toggle('hidden',first);
 }
 $('#setupClose').onclick=()=>$('#setup').classList.add('hidden');
@@ -66,7 +66,7 @@ function renderCard(){
     if(!confirm(`별 ${CARD_COST}개를 사용해서 카드놀이를 한 판 할까요?\n(남는 별: ${P.wallet-CARD_COST}개)`)){e.preventDefault();return;}
     P.wallet-=CARD_COST;P.cardPlays++;store.save(P);audio.win();setTimeout(renderHome,300);};
 }
-function setGroup(g){P.group=g;voice.on=GROUPS[g].voice;$('#voiceBtn').classList.toggle('off',!voice.on);store.save(P);renderHome();audio.tap();}
+function setGroup(g){if(!$('#play').classList.contains('hidden')&&!confirm('학기를 바꾸면 이번 판은 종료돼요. 바꿀까요?'))return;P.group=g;voice.on=GROUPS[g].voice;$('#voiceBtn').classList.toggle('off',!voice.on);store.save(P);goHome();audio.tap();}
 function startMode(id){const idx=CUR[P.group].modes.findIndex(m=>m.id===id);if(idx<0)return;startRound(id,{stage:idx+1,unitPractice:true});}
 function startStage(n){const r=STAGE_SYSTEM.record(P,P.group);if(eligibleNow()&&n>r.level)return;startRound('stage'+n,{stage:n});}
 
@@ -76,7 +76,7 @@ function startRound(mode,opts={}){
  stopTimer();const stage=Number(opts.stage)||Number(String(mode).replace('stage',''))||Math.min(12,STAGE_SYSTEM.record(P,P.group).level);
  const unitPractice=!!opts.unitPractice,record=STAGE_SYSTEM.record(P,P.group),info=STAGE_SYSTEM.meta(P.group,stage);
  const plan=STAGE_SYSTEM.plan(P.group,stage,Math.random,unitPractice?mode:null);
- S={group:P.group,mode,stage,unitPractice,official:!unitPractice&&eligibleNow()&&stage===record.level,eligible:!unitPractice&&eligibleNow(),phase:STAGE_SYSTEM.phase(P,P.group,stage),title:unitPractice?CUR[P.group].modes.find(m=>m.id===mode).title:info.title,
+ S={group:P.group,mode,stage,unitPractice,official:!unitPractice&&eligibleNow()&&stage===record.level,eligible:!unitPractice&&eligibleNow(),phase:unitPractice?'단원 자유 연습':!eligibleNow()?'다른 학기 연습':stage<record.level?'완료 단계 복습':STAGE_SYSTEM.phase(P,P.group,stage),title:unitPractice?CUR[P.group].modes.find(m=>m.id===mode).title:info.title,
  i:0,total:TOTAL,plan,correct:0,answeredCount:0,combo:0,maxCombo:0,q:null,answered:false,fields:{},active:null,cells:new Set(),seen:new Set(),log:[],highOk:0,reviewCorrect:0,currentCorrect:0,fingerprints:[]};
  nextQuestion();show('play');
 }
