@@ -146,3 +146,15 @@ test('reset 버전이 다른 저장(학기 초기화 같은 큰 변경)은 기�
   const {out}=await S.call('PUT','RESETCODE',blank({wallet:0,t:2}));
   assert.equal(out.ok,true);
 });
+
+test('서버 확인 중에 연결을 끊으면, 늦게 도착한 서버 기록을 적용하지 않음',async()=>{
+  const S=makeServer();
+  const a=makeDevice('a',S,blank({wallet:9,cardPlays:1,family:'LATECODE'}));await a.pull();
+  const b=makeDevice('b',S,blank({wallet:9,cardPlays:1,family:'LATECODE'}));await b.pull();
+  b.P.wallet=20;b.save();await b.flush();                     // 서버는 별 20개
+  const p=a.api.CLOUD.pull();                                 // A가 확인 시작 (아직 도착 전)
+  a.P.family='';a.P.wallet=2;                                 // 그 사이에 연결 끊고 기록 변경
+  await p;await settle();
+  assert.equal(a.P.wallet,2,'끊긴 기기에 서버 기록이 덮이면 안 됨');
+  assert.equal(a.P.family,'');
+});
