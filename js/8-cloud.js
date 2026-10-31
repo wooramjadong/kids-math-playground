@@ -104,10 +104,11 @@ const CLOUD={api:'api/state',pushTimer:null,pulling:false,status:'',last:0,remot
     return c;
   },
   async pull(){
-    if(!this.on()||this.pulling)return;this.pulling=true;
-    try{const r=await fetch(`${this.api}?code=${this.code()}&_=${Date.now()}`,{cache:'no-store'});
+    if(!this.on()||this.pulling)return;this.pulling=true;const code=this.code();
+    try{const r=await fetch(`${this.api}?code=${code}&_=${Date.now()}`,{cache:'no-store'});
       if(r.status===503){this.status='nostore';return;}
       const j=await r.json();this.status='ok';this.last=Date.now();
+      if(this.code()!==code)return; // 확인하는 사이에 연결을 끊거나 코드를 바꾼 경우
       if(!j.state){await this.push(true);return;} // 서버가 비어 있으면 이 기기 기록을 먼저 올려요
       await this.reconcile(j.state);
     }catch(e){this.status='offline';}finally{this.pulling=false;renderCloudBadge();}
@@ -121,9 +122,11 @@ const CLOUD={api:'api/state',pushTimer:null,pulling:false,status:'',last:0,remot
   async push(bump){
     if(!this.on())return;
     if(bump){P.t=Math.max(Date.now(),this.remoteT+1,P.t||0);_storeSaveRaw(P);}
-    try{const r=await fetch(`${this.api}?code=${this.code()}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(this.pack())});
+    const code=this.code();
+    try{const r=await fetch(`${this.api}?code=${code}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(this.pack())});
       if(r.status===503){this.status='nostore';return;}
       const j=await r.json();this.status='ok';this.last=Date.now();
+      if(this.code()!==code)return; // 올리는 사이에 연결을 끊거나 코드를 바꾼 경우
       if(j.ok)this.remoteT=Math.max(this.remoteT,P.t||0);
       if(j.stale&&j.state&&this.depth<2){this.depth++;try{await this.reconcile(j.state);}finally{this.depth--;}}
     }catch(e){this.status='offline';}finally{renderCloudBadge();}
