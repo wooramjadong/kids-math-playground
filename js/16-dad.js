@@ -90,17 +90,19 @@ function openDadMode(){
   };
   lockView();
 }
-/* ⚙️ 설정 창에 "아빠 모드" 버튼 */
+/* ⚙️ 설정 창에 "아빠 모드" 버튼 — 아이 선택 바로 아래(휴대폰에서도 내리지 않고 보이게) [2026-11-01 고침] */
+function addDadButton(){
+  const m=document.querySelector('#setup .modalbox');if(!m||document.getElementById('dadOpen'))return;
+  const b=document.createElement('button');b.id='dadOpen';b.className='btn ghost dadopen';b.textContent='👨 아빠 모드 (별 충전)';
+  b.onclick=()=>{document.getElementById('setup').classList.add('hidden');openDadMode();};
+  const list=document.getElementById('setupList');
+  if(list&&list.parentNode===m)m.insertBefore(b,list.nextSibling);else m.insertBefore(b,document.getElementById('setupClose')||null);
+}
 (function(){
   try{
     if(typeof renderSetup!=='function'||typeof document==='undefined'||!document.getElementById||!document.getElementById('setup'))return;
     const _rsDad=renderSetup;
-    renderSetup=function(first){
-      _rsDad(first);
-      const m=document.querySelector('#setup .modalbox');if(!m||document.getElementById('dadOpen'))return;
-      const b=document.createElement('button');b.id='dadOpen';b.className='btn ghost dadopen';b.textContent='👨 아빠 모드 (별 충전)';
-      b.onclick=()=>{document.getElementById('setup').classList.add('hidden');openDadMode();};
-      const closeBtn=document.getElementById('setupClose');m.insertBefore(b,closeBtn||null);
-    };
+    renderSetup=function(first){_rsDad(first);addDadButton();};
+    addDadButton(); // 처음 여는 기기의 "누가 할까요?" 창에도 (이 파일보다 먼저 열린 경우)
   }catch(e){}
 })();
