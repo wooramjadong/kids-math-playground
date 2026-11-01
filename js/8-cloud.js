@@ -9,6 +9,49 @@
    - 이 기기 기록을 바꾸기 전에는 항상 이 기기 안에 백업을 남겨요. (⚙️ → 🛟 백업)
    - 서버(api/state.js)도 같은 규칙으로, 모은 기록이 줄어드는 저장을 거절해요. */
 
+/* ⭐ 별 장부 [2026-11-01] — 같은 가족 코드의 여러 기기가 동시에 별을 받거나 써도 모두 더해져요.
+   P.ledger = { v:1, base:{e,c}, dev:{ <기기ID>:{e,c} } }   e = 받은 별 누계, c = 카드놀이 판 수
+   - 기기마다 자기 칸(dev)에만 적고, 합칠 때는 기기별로 큰 값 → 같은 기록을 여러 번 받아도 두 번 세지 않아요.
+   - 남은 별(wallet) = 받은 별 합계 - 5 × 카드놀이 합계
+   - 장부가 없는 예전 기록은 지금 별·카드놀이를 기준(base)으로 삼아요.
+   - 별을 직접 고칠 때는 wallet이 아니라 ledger.base.e 를 고쳐야 해요(wallet은 장부에서 다시 계산됨). */
+const LEDGER_DEV_KEY='mathplay-device-id';
+function cloudDeviceId(){
+  try{let id=localStorage.getItem(LEDGER_DEV_KEY);if(!id){id='d'+Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4);localStorage.setItem(LEDGER_DEV_KEY,id);}return id;}
+  catch(e){return 'd-nostore';}
+}
+const ledgerN=v=>Math.max(0,Number(v)||0);
+const ledgerValid=L=>!!(L&&typeof L==='object'&&L.dev&&typeof L.dev==='object'&&L.base&&typeof L.base==='object');
+/* s의 장부. 없으면 지금 별·카드놀이로 기준을 만든다. other에 장부가 있으면 그 기기별 몫은
+   이미 s의 별에 들어 있다고 보고 빼서(두 번 세지 않기) 기준만 남긴다. */
+function ledgerOf(s,other){
+  if(s&&ledgerValid(s.ledger))return s.ledger;
+  const E=ledgerN(s&&s.wallet)+5*ledgerN(s&&s.cardPlays),C=ledgerN(s&&s.cardPlays);
+  let de=0,dc=0;const o=other&&ledgerValid(other.ledger)?other.ledger:null;
+  if(o)for(const k in o.dev){de+=ledgerN(o.dev[k]&&o.dev[k].e);dc+=ledgerN(o.dev[k]&&o.dev[k].c);}
+  return {v:1,base:{e:Math.max(0,E-de),c:Math.max(0,C-dc)},dev:{}};
+}
+function ledgerTotals(L){let e=ledgerN(L.base&&L.base.e),c=ledgerN(L.base&&L.base.c);for(const k in L.dev){e+=ledgerN(L.dev[k]&&L.dev[k].e);c+=ledgerN(L.dev[k]&&L.dev[k].c);}return {e,c};}
+/* 장부로 남은 별·카드놀이 다시 계산 */
+function ledgerApply(s){const L=ledgerOf(s);s.ledger=L;const t=ledgerTotals(L);s.cardPlays=t.c;s.wallet=Math.max(0,t.e-5*t.c);return s;}
+/* 두 장부 합치기: 기준과 기기별 칸마다 큰 값 */
+function ledgerMerge(a,b){
+  const A=ledgerOf(a,b),B=ledgerOf(b,a);
+  const m={v:1,base:{e:Math.max(ledgerN(A.base.e),ledgerN(B.base.e)),c:Math.max(ledgerN(A.base.c),ledgerN(B.base.c))},dev:{}};
+  for(const L of [A,B])for(const k in L.dev){const x=L.dev[k]||{},y=m.dev[k]||{e:0,c:0};m.dev[k]={e:Math.max(ledgerN(y.e),ledgerN(x.e)),c:Math.max(ledgerN(y.c),ledgerN(x.c))};}
+  return m;
+}
+/* a의 장부에 b가 모르는 기록이 있는지 (기기별 칸 비교) */
+function ledgerHasMore(a,b){
+  if(!a||!ledgerValid(a.ledger))return false;const A=a.ledger,B=ledgerValid(b&&b.ledger)?b.ledger:{base:{e:0,c:0},dev:{}};
+  if(!ledgerValid(b&&b.ledger))return Object.keys(A.dev).length>0&&ledgerTotals(A).e>ledgerN(b&&b.wallet)+5*ledgerN(b&&b.cardPlays);
+  for(const k in A.dev){const x=A.dev[k]||{},y=B.dev[k]||{};if(ledgerN(x.e)>ledgerN(y.e)||ledgerN(x.c)>ledgerN(y.c))return true;}
+  return ledgerN(A.base.e)>ledgerN(B.base.e)||ledgerN(A.base.c)>ledgerN(B.base.c);
+}
+/* 게임에서 별을 받을 때 / 카드놀이에 별을 쓸 때 (이 기기 칸에 기록) */
+function cloudEarn(p,n){n=Math.max(0,Math.trunc(Number(n))||0);if(!n)return;const L=ledgerOf(p);p.ledger=L;const id=cloudDeviceId();const d=L.dev[id]||(L.dev[id]={e:0,c:0});d.e=ledgerN(d.e)+n;ledgerApply(p);}
+function cloudSpendCard(p){const L=ledgerOf(p);p.ledger=L;const id=cloudDeviceId();const d=L.dev[id]||(L.dev[id]={e:0,c:0});d.c=ledgerN(d.c)+1;ledgerApply(p);}
+
 /* 모은 기록 재기 — 서버(api/state.js)와 같은 규칙 */
 function cloudProgress(s){
   s=s||{};const n=v=>Number(v)||0;
@@ -22,6 +65,8 @@ function cloudProgress(s){
 function cloudCompare(a,b){
   const pa=cloudProgress(a),pb=cloudProgress(b);let more=false,less=false;
   for(const k in pa){if(pa[k]>pb[k])more=true;else if(pa[k]<pb[k])less=true;}
+  // 별 장부: 합계가 적어도 상대가 모르는 기기별 별이 있으면 '더 많음'으로 본다(합쳐야 함)
+  if(ledgerHasMore(a,b))more=true;if(ledgerHasMore(b,a))less=true;
   return more&&less?'diverged':more?'ahead':less?'behind':'equal';
 }
 const cloudHasProgress=s=>Object.values(cloudProgress(s)).some(v=>v>0);
@@ -49,9 +94,8 @@ function cloudMergeStage(a,b){
 function cloudMerge(L,R){
   const base=(R.t||0)>=(L.t||0)?R:L,other=base===R?L:R;
   const m=cloudClone(base),n=v=>Number(v)||0;
-  const cp=Math.max(n(L.cardPlays),n(R.cardPlays));
-  const earned=Math.max(cloudProgress(L).earned,cloudProgress(R).earned);
-  m.cardPlays=cp;m.wallet=Math.max(0,earned-5*cp);
+  // 별·카드놀이: 별 장부를 기기별로 합쳐서 다시 계산 (동시에 받은 별도 모두 더해짐)
+  m.ledger=ledgerMerge(L,R);ledgerApply(m);
   // 스티커: 양쪽에 있는 것을 모두 (같은 스티커는 많은 쪽 개수만큼)
   const have={};m.stickers=(base.stickers||[]).slice();m.stickers.forEach(x=>have[x]=(have[x]||0)+1);
   const seen={};(other.stickers||[]).forEach(x=>{seen[x]=(seen[x]||0)+1;if(seen[x]>(have[x]||0)){m.stickers.push(x);have[x]=(have[x]||0)+1;}});
@@ -113,7 +157,7 @@ const CLOUD={api:'api/state',pushTimer:null,pulling:false,status:'',last:0,remot
       await this.reconcile(j.state);
     }catch(e){this.status='offline';}finally{this.pulling=false;renderCloudBadge();}
   },
-  applyRemote(s){const fam=P.family;SYNC_KEYS.forEach(k=>{if(s[k]!==undefined)P[k]=cloudClone(s[k]);});P.t=s.t||Date.now();P.family=fam;
+  applyRemote(s){const fam=P.family;SYNC_KEYS.forEach(k=>{if(s[k]!==undefined)P[k]=cloudClone(s[k]);});if(!ledgerValid(s.ledger))delete P.ledger;else ledgerApply(P);P.t=s.t||Date.now();P.family=fam;
     fixGroups(P);const stale=s.resetV!==RESET_V;if(stale){P.resetV=null;applyReset(P);P.news=false;}
     if(stale)store.save(P);else _storeSaveRaw(P);voice.on=GROUPS[P.group].voice;$('#voiceBtn').classList.toggle('off',!voice.on);
     if(!$('#home').classList.contains('hidden'))renderHome();},

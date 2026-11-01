@@ -80,7 +80,8 @@ const STAGE_SYSTEM=(()=>{
  function finish(p,g,n,stats){
   const info=meta(g,n),r=record(p,g),s=step(p,g,n);
   const out={progressed:false,stageClear:false,semesterClear:false,training:false,passed:false,nextGroup:null};
-  if(!stats.official || n!==r.level || s.complete)return {...out,practiceOnly:true};
+  // [2026-11-01] 순서 없이 아무 단계나 골라도 그 단계 진도를 인정한다(이미 완료한 단계는 복습)
+  if(!stats.official || s.complete)return {...out,practiceOnly:true};
   s.rounds=(Number(s.rounds)||0)+1;s.best=Math.max(Number(s.best)||0,stats.correct*5);
   s.last={score:stats.correct*5,highOk:stats.highOk,reviewCorrect:stats.reviewCorrect,date:stats.date||dateNow()};
   r.recent=[...r.recent,...(stats.fingerprints||[])].slice(-120);
@@ -88,9 +89,9 @@ const STAGE_SYSTEM=(()=>{
   else{
    out.passed=stats.correct*5>=info.passScore&&stats.highOk>=info.highRequired;
    if(out.passed){s.passes++;out.progressed=true;}
-   if(s.passes>=2){s.complete=true;s.date=stats.date||dateNow();out.stageClear=true;r.level=n+1;}
+   if(s.passes>=2){s.complete=true;s.date=stats.date||dateNow();out.stageClear=true;let lv=1;while(lv<=12&&r.steps[lv]?.complete===true)lv++;r.level=lv;}
   }
-  if(out.stageClear&&n===12){
+  if(out.stageClear&&r.level>12){ // 12단계를 모두 끝냈을 때 학기 졸업
    r.completed=s.date;out.semesterClear=true;
    p.grad=p.grad||{};if(!p.grad[g])p.grad[g]=s.date;
    const next=order[order.indexOf(g)+1];out.nextGroup=next||null;

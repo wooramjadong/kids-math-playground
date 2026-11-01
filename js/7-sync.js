@@ -1,6 +1,8 @@
 /* ───────── 다른 기기와 연결 (기록 옮기기) ─────────
    서버 없이 동작: 기록 전체를 링크(#sync=…)와 QR 코드로 만들어 다른 기기에서 열면 그대로 복사돼요. */
-const SYNC_KEYS=['wallet','cardPlays','myGroup','daily','done','stickers','setupDone','group','grad','resetV','stageProgress'];
+// 'group'(지금 보고 있는 학기)은 기기마다 따로 — 한 기기에서 학기를 바꿔도 다른 기기 화면은 그대로 [2026-11-01]
+// 'ledger' = 기기별 별 장부(js/8-cloud.js) — 두 기기가 동시에 별을 받아도 모두 더해짐
+const SYNC_KEYS=['wallet','cardPlays','myGroup','daily','done','stickers','setupDone','grad','resetV','stageProgress','ledger'];
 const b64e=s=>btoa(unescape(encodeURIComponent(s))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 const b64d=s=>decodeURIComponent(escape(atob(s.replace(/-/g,'+').replace(/_/g,'/')+'==='.slice((s.length+3)%4))));
 function syncPack(){const o={};SYNC_KEYS.forEach(k=>{if(P[k]!==undefined)o[k]=P[k];});o.stickers=(P.stickers||[]).slice();o.t=Date.now();return b64e(JSON.stringify(o));}
