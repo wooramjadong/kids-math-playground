@@ -54,7 +54,9 @@ fixGroups(P);
 })();
 if(P.wallet==null)P.wallet=0;
 const CARD_URL='https://siwon-card-nori.vercel.app/',CARD_COST=5;
-const cardPlays=()=>Math.floor(P.wallet/CARD_COST);
+// 별은 가족 별(시원+나은 합계, js/8-cloud.js의 starWallet)
+const famStars=()=>typeof starWallet==='function'?starWallet():(Number(P.wallet)||0);
+const cardPlays=()=>Math.floor(famStars()/CARD_COST);
 const age=()=>P.group;
 
 const audio={ctx:null,on:true,

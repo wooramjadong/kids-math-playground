@@ -156,6 +156,7 @@ const CLOUD={api:'api/state',pushTimer:null,pulling:false,status:'',last:0,remot
       if(!j.state){await this.push(true);return;} // 서버가 비어 있으면 이 기기 기록을 먼저 올려요
       await this.reconcile(j.state);
     }catch(e){this.status='offline';}finally{this.pulling=false;renderCloudBadge();}
+    if(STAR.shared()){STAR.migrate();await STAR.sync();} // 가족 별(시원+나은) 맞추기
   },
   applyRemote(s){const fam=P.family;SYNC_KEYS.forEach(k=>{if(s[k]!==undefined)P[k]=cloudClone(s[k]);});if(!ledgerValid(s.ledger))delete P.ledger;else ledgerApply(P);P.t=s.t||Date.now();P.family=fam;
     fixGroups(P);if(typeof kidApply==='function')kidApply(P);const stale=s.resetV!==RESET_V;if(stale){P.resetV=null;applyReset(P);P.news=false;}
@@ -176,6 +177,41 @@ const CLOUD={api:'api/state',pushTimer:null,pulling:false,status:'',last:0,remot
     }catch(e){this.status='offline';}finally{renderCloudBadge();}
   },
 };
+/* ⭐ 가족 별 — 시원이와 나은이 별을 합쳐서 보여주고 함께 써요 [2026-11-01]
+   별은 가족 코드 기본 칸(시원이 기록)의 별 장부 하나에 모아요. 시원이 기기는 그 기록을 그대로 쓰고,
+   다른 아이(나은) 기기는 별을 받거나 쓸 때 기본 칸 장부에 더하고(api/state?mode=stars), 화면에는 합계를 보여줘요.
+   진도·하루 상한(6개)·스티커는 아이마다 따로예요. */
+const STARBANK_KEY='mathplay-starbank';
+const STAR={
+  base(){const f=P.family||'';return typeof kidCodeBase==='function'?kidCodeBase(f):f;},
+  shared(){const b=this.base();return !!b&&P.family!==b;},   // 이 기기 아이 기록이 기본 칸이 아니면(나은) 가족 별 장부를 따로 씀
+  get(){let b=null;try{b=JSON.parse(localStorage.getItem(STARBANK_KEY)||'null');}catch(e){}
+    if(!b||b.code!==this.base()||!ledgerValid(b.ledger))b={code:this.base(),ledger:{v:1,base:{e:0,c:0},dev:{}},known:false};return b;},
+  put(b){try{localStorage.setItem(STARBANK_KEY,JSON.stringify(b));}catch(e){}},
+  wallet(){if(!this.shared())return ledgerN(P.wallet);const t=ledgerTotals(this.get().ledger);return Math.max(0,t.e-5*t.c);},
+  kidId(){return (typeof KID!=='undefined'&&KID)||'kid';},
+  add(e,c){const b=this.get();const id=cloudDeviceId()+':'+this.kidId();const d=b.ledger.dev[id]||(b.ledger.dev[id]={e:0,c:0});
+    d.e=ledgerN(d.e)+ledgerN(e);d.c=ledgerN(d.c)+ledgerN(c);b.pending=true;this.put(b);this.sync();},
+  /* 아이별 별 시절(잠깐) 이 아이 기록에 쌓인 별을 가족 별로 — 고정 칸이라 여러 기기에서 해도 한 번만 셈 */
+  migrate(){if(!this.shared())return;const t=ledgerValid(P.ledger)?ledgerTotals(P.ledger):{e:ledgerN(P.wallet)+5*ledgerN(P.cardPlays),c:ledgerN(P.cardPlays)};
+    if(!t.e&&!t.c)return;const b=this.get();const id='kid:'+this.kidId()+':record';const d=b.ledger.dev[id]||{e:0,c:0};
+    if(ledgerN(d.e)>=t.e&&ledgerN(d.c)>=t.c)return;b.ledger.dev[id]={e:Math.max(ledgerN(d.e),t.e),c:Math.max(ledgerN(d.c),t.c)};b.pending=true;this.put(b);},
+  syncing:false,
+  async sync(){
+    if(!this.shared()||this.syncing)return;this.syncing=true;
+    try{let b=this.get();
+      // 시간값(t)을 일부러 안 보냄: 이 기능을 모르는 예전 서버는 일반 저장으로 받지 않고 거절(기본 칸 기록 덮어쓰기 방지)
+      if(b.pending){const r=await fetch(`${CLOUD.api}?code=${this.base()}&mode=stars`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ledger:b.ledger,resetV:RESET_V})});
+        const j=await r.json();if(j&&ledgerValid(j.ledger)){b=this.get();b.ledger=ledgerMerge({ledger:b.ledger},{ledger:j.ledger});b.pending=false;b.known=true;this.put(b);}}
+      else{const r=await fetch(`${CLOUD.api}?code=${this.base()}&_=${Date.now()}`,{cache:'no-store'});const j=await r.json();
+        if(j&&j.state){b=this.get();b.ledger=ledgerValid(j.state.ledger)?ledgerMerge({ledger:b.ledger},{ledger:j.state.ledger}):ledgerMerge({ledger:b.ledger},{ledger:ledgerOf(j.state)});b.known=true;this.put(b);}}
+    }catch(e){}finally{this.syncing=false;try{if(typeof renderHome==='function'&&$('#home')&&!$('#home').classList.contains('hidden'))renderHome();}catch(e){}}
+  }
+};
+function starWallet(){return STAR.wallet();}
+function starEarn(p,n){if(STAR.shared())STAR.add(n,0);else cloudEarn(p,n);}
+function starSpendCard(p){if(STAR.shared())STAR.add(0,1);else cloudSpendCard(p);}
+
 /* 저장할 때마다 시각을 기록하고 클라우드로 보내기 */
 const _storeSaveRaw=store.save.bind(store);
 store.save=function(d){d.t=Date.now();_storeSaveRaw(d);CLOUD.schedulePush();};

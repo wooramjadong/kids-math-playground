@@ -35,7 +35,7 @@ function renderHome(){
  $('#groupTog').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.g===P.group));
  $('#heroTitle').textContent=g.title;$('#heroDesc').textContent='학기마다 12단계 · 원하는 단계를 골라서 해도 돼요 · 단계마다 연습 1판 + 도전 통과 2회';
  $('#legend').innerHTML='<span class="badge g">'+g.sub+'</span><span class="stage-pill">현재 '+(r.level>12?'12단계 모두 완료':current+' / 12단계')+'</span><span class="lvline">한 판 20문제 = 현재 범위 15 + 앞 단원 응용 5<br>하 2 · 중 10 · 상 8 (KMA 중상 목표 사고력)</span>';
- const dy=daily();$('#totalStars').textContent=P.wallet;renderCard();
+ const dy=daily();$('#totalStars').textContent=famStars();$('#totalStars').title='시원+나은 별 합계';renderCard();
  let kp=$('#kidPill');if(!kp&&$('#gearBtn')){kp=document.createElement('button');kp.id='kidPill';kp.className='iconbtn kidpill';kp.title='누가 할까요? (아이 바꾸기)';$('#gearBtn').before(kp);kp.onclick=()=>renderSetup(false);}if(kp)kp.textContent=KID_PROFILES[KID]?KID_PROFILES[KID].emoji+' '+KID_PROFILES[KID].name.slice(1):'👤 누구?';
  const clear=Object.values(r.steps).filter(x=>x.complete).length;
  $('#eligible').innerHTML=(mine?'<span class="ok">'+kidTag()+' · 오늘 별 '+dy.earned+' / '+DAILY_CAP+'</span>':'<span class="warn">'+kidTag()+' · 더 낮은 학기는 복습이라 별·진도가 없어요</span>')+'<span class="hint">'+STAR_RULE+' · 같은 단계는 하루 1번만 별</span><span class="hint">단계 완료 '+clear+' / 12 · '+(r.level>12?'학기 완료':'연습 후 도전 2회: 80점 이상, 상 6/8 이상 (12단계는 90점)')+'</span>';
@@ -69,16 +69,16 @@ function renderSetup(first){
 $('#setupClose').onclick=()=>$('#setup').classList.add('hidden');
 $('#gearBtn').onclick=()=>renderSetup(false);
 function renderCard(){
-  const plays=cardPlays(),need=CARD_COST-(P.wallet%CARD_COST);
+  const plays=cardPlays(),need=CARD_COST-(famStars()%CARD_COST);
   const tickets=plays?Array.from({length:Math.min(plays,10)},()=>'🎟️').join('')+(plays>10?` +${plays-10}`:''):'';
   $('#cardplay').innerHTML=`<div class="cp-head"><div class="cp-title display">🃏 카드놀이</div><div class="cp-rule">별 ${CARD_COST}개 = 카드놀이 1판</div></div>
-    <div class="cp-body"><div class="cp-stat">지금 별 <b>${P.wallet}</b>개 → <b class="${plays?'ok':''}">${plays}판</b> 할 수 있어요 ${tickets?`<span class="tickets">${tickets}</span>`:''}</div>
+    <div class="cp-body"><div class="cp-stat">지금 별(시원+나은) <b>${famStars()}</b>개 → <b class="${plays?'ok':''}">${plays}판</b> 할 수 있어요 ${tickets?`<span class="tickets">${tickets}</span>`:''}</div>
     ${plays?`<a class="btn purple" id="cardGo" href="${CARD_URL}" target="_blank" rel="noopener">카드놀이 하러 가기 <span class="cost">⭐ ${CARD_COST} 사용</span></a>`
       :`<button class="btn locked" disabled>🔒 별 ${need}개 더 모으면 열려요</button>`}
     ${P.cardPlays?`<div class="cp-hist">지금까지 카드놀이 ${P.cardPlays}판 했어요</div>`:''}</div>`;
-  const a=$('#cardGo');if(a)a.onclick=e=>{if(P.wallet<CARD_COST){e.preventDefault();return;}
-    if(!confirm(`별 ${CARD_COST}개를 사용해서 카드놀이를 한 판 할까요?\n(남는 별: ${P.wallet-CARD_COST}개)`)){e.preventDefault();return;}
-    if(typeof cloudSpendCard==='function')cloudSpendCard(P);else{P.wallet-=CARD_COST;P.cardPlays++;}store.save(P);audio.win();setTimeout(renderHome,300);};
+  const a=$('#cardGo');if(a)a.onclick=e=>{if(famStars()<CARD_COST){e.preventDefault();return;}
+    if(!confirm(`별 ${CARD_COST}개를 사용해서 카드놀이를 한 판 할까요?\n(남는 별: ${famStars()-CARD_COST}개)`)){e.preventDefault();return;}
+    if(typeof starSpendCard==='function')starSpendCard(P);else{P.wallet-=CARD_COST;P.cardPlays++;}store.save(P);audio.win();setTimeout(renderHome,300);};
 }
 function setGroup(g){if(!$('#play').classList.contains('hidden')&&!confirm('학기를 바꾸면 이번 판은 종료돼요. 바꿀까요?'))return;P.group=g;voice.on=GROUPS[g].voice;$('#voiceBtn').classList.toggle('off',!voice.on);store.save(P);goHome();audio.tap();}
 function startMode(id){const idx=CUR[P.group].modes.findIndex(m=>m.id===id);if(idx<0)return;startRound(id,{stage:idx+1,unitPractice:true});}
@@ -250,16 +250,16 @@ function endRound(){
  else if(dy.got[key]){earn=0;why='이 단계는 오늘 이미 별을 받았어요. 진도 도전은 계속할 수 있어요.';}
  else if(dy.earned>=DAILY_CAP){earn=0;why='오늘 별을 모두 모았어요. 진도는 계속 진행할 수 있어요.';}
  else earn=Math.min(earn,DAILY_CAP-dy.earned);
- if(currentlyEligible){dy.plays[key]=(dy.plays[key]||0)+1;if(earn>0)dy.got[key]=true;dy.earned+=earn;if(earn>0){if(typeof cloudEarn==='function')cloudEarn(P,earn);else P.wallet+=earn;}}
+ if(currentlyEligible){dy.plays[key]=(dy.plays[key]||0)+1;if(earn>0)dy.got[key]=true;dy.earned+=earn;if(earn>0){if(typeof starEarn==='function')starEarn(P,earn);else P.wallet+=earn;}}
  let sticker='';if(currentlyEligible&&stars){sticker=pick(STICKERS);P.stickers.push(sticker);if(P.stickers.length>80)P.stickers.shift();}
  const out=STAGE_SYSTEM.finish(P,S.group,S.stage,{official:S.official&&currentlyEligible,correct:S.correct,highOk:S.highOk,reviewCorrect:S.reviewCorrect,fingerprints:S.fingerprints,date:today()});
  const step=STAGE_SYSTEM.step(P,S.group,S.stage),info=STAGE_SYSTEM.meta(S.group,S.stage);
  let title=out.semesterClear?'학기 졸업!':out.stageClear?'단계를 통과했어요!':out.training?'연습 완료! 이제 도전해요':out.passed?'도전 통과! 한 번 더 확인해요':S.official?'틀린 유형을 살피고 다시 도전해요':'복습을 마쳤어요';
  let message=out.semesterClear?(out.nextGroup?GROUPS[out.nextGroup].sub+' 1단계로 진급했어요.':'1학년 1학기부터 4학년 2학기까지 모두 마쳤어요!'):out.stageClear?S.stage+'단계를 완료했어요! 다른 단계도 골라서 해 보세요.':out.training?'서로 다른 문제로 도전 두 번을 통과하면 이 단계가 완료돼요.':out.practiceOnly?(step.complete?'이미 완료한 단계라 복습으로 했어요.':'이 판은 연습이라 단계 진도에는 반영하지 않아요.'):info.passScore+'점 이상 + 상 8문제 중 6개 이상 정답 · 도전 통과 '+step.passes+'/2';
- $('#totalStars').textContent=P.wallet;$('#groupTog').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.g===P.group));
+ $('#totalStars').textContent=famStars();$('#groupTog').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.g===P.group));
  store.save(P);
  const next=out.semesterClear?(out.nextGroup?'<button class="btn purple" onclick="startStage(1)">다음 학기 1단계</button>':''):out.stageClear?'<button class="btn purple" onclick="startStage('+(S.stage+1)+')">다음 단계</button>':'<button class="btn blue" onclick="'+(S.unitPractice?'startMode(\''+S.mode+'\')':'startStage('+S.stage+')')+'">'+(out.training?'도전 시작':'새 문제로 다시 하기')+'</button>';
- $('#resultCard').innerHTML='<div class="stage-result-kicker">'+GROUPS[S.group].sub+' · '+S.stage+'단계 · '+S.title+'</div><h2 class="display">'+title+'</h2><p>'+message+'</p><div class="stat"><span>점수<b>'+score+'점</b></span><span>현재 범위<b>'+S.currentCorrect+' / 15</b></span><span>응용 복습<b>'+S.reviewCorrect+' / 5</b></span><span>상 문제<b>'+S.highOk+' / 8</b></span></div><div class="walletline">'+(earn?'별 '+earn+'개 획득! ':'')+why+'<br>모은 별 '+P.wallet+'개 · 오늘 '+dy.earned+'/'+DAILY_CAP+'</div>'+(sticker?'<div class="newst">새 스티커 <b>'+sticker+'</b></div>':'')+'<p class="stage-note">계산만 반복하지 않고, 틀린 유형의 풀이를 읽고 새 문제로 확인해요.</p><div class="row" style="justify-content:center"><button class="btn ghost" onclick="goHome()">홈으로</button>'+next+'</div>';
+ $('#resultCard').innerHTML='<div class="stage-result-kicker">'+GROUPS[S.group].sub+' · '+S.stage+'단계 · '+S.title+'</div><h2 class="display">'+title+'</h2><p>'+message+'</p><div class="stat"><span>점수<b>'+score+'점</b></span><span>현재 범위<b>'+S.currentCorrect+' / 15</b></span><span>응용 복습<b>'+S.reviewCorrect+' / 5</b></span><span>상 문제<b>'+S.highOk+' / 8</b></span></div><div class="walletline">'+(earn?'별 '+earn+'개 획득! ':'')+why+'<br>모은 별(시원+나은) '+famStars()+'개 · 오늘 '+dy.earned+'/'+DAILY_CAP+'</div>'+(sticker?'<div class="newst">새 스티커 <b>'+sticker+'</b></div>':'')+'<p class="stage-note">계산만 반복하지 않고, 틀린 유형의 풀이를 읽고 새 문제로 확인해요.</p><div class="row" style="justify-content:center"><button class="btn ghost" onclick="goHome()">홈으로</button>'+next+'</div>';
  if(out.progressed||stars>=2)audio.win();voice.say(title);show('result');
 }
 
