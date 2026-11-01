@@ -37,6 +37,9 @@ function ledgerMerge(a,b){
   for(const L of [A,B])for(const k in L.dev){const x=L.dev[k]||{},y=m.dev[k]||{e:0,c:0};m.dev[k]={e:Math.max(ln(y.e),ln(x.e)),c:Math.max(ln(y.c),ln(x.c))};}
   return m;
 }
+// 👨 아빠 모드 비밀번호(해시만 저장): 더 최근에 정한 것을 남긴다 [2026-11-01]
+const pinOk=r=>!!(r&&typeof r==='object'&&typeof r.h==='string'&&/^[0-9a-f]{64}$/.test(r.h)&&typeof r.s==='string'&&r.s.length<=40);
+const newerPin=(a,b)=>{a=pinOk(a)?a:null;b=pinOk(b)?b:null;if(!a)return b;if(!b)return a;return (Number(b.t)||0)>(Number(a.t)||0)?b:a;};
 function ledgerApply(s,L){let e=ln(L.base.e),c=ln(L.base.c);for(const k in L.dev){e+=ln(L.dev[k].e);c+=ln(L.dev[k].c);}s.ledger=L;s.cardPlays=c;s.wallet=Math.max(0,e-5*c);return s;}
 
 const handler=async(req,res)=>{
@@ -62,9 +65,10 @@ const handler=async(req,res)=>{
       // 기본 칸에 장부가 아직 없으면 지금 별·카드놀이를 그대로 기준으로 (보낸 칸은 아직 여기에 없는 별)
       const prevL=prev&&lvalid(prev.ledger)?prev.ledger:{v:1,base:{e:ln(prev&&prev.wallet)+5*ln(prev&&prev.cardPlays),c:ln(prev&&prev.cardPlays)},dev:{}};
       ledgerApply(next,ledgerMerge({ledger:prevL},{ledger:body.ledger}));
+      const pin=newerPin(prev&&prev.dadPin,body.dadPin);if(pin)next.dadPin={h:pin.h,s:pin.s,t:Number(pin.t)||0};
       next.t=Math.max(Number(prev&&prev.t)||0,Date.now())+1;
       await redis(['SET',key,JSON.stringify(next)]);
-      return res.status(200).json({ok:true,ledger:next.ledger,wallet:next.wallet,cardPlays:next.cardPlays});
+      return res.status(200).json({ok:true,ledger:next.ledger,wallet:next.wallet,cardPlays:next.cardPlays,dadPin:next.dadPin||null});
     }
     if(req.method==='PUT'||req.method==='POST'){
       let body=req.body;if(typeof body==='string'){try{body=JSON.parse(body||'{}');}catch(e){body=null;}}
@@ -74,6 +78,8 @@ const handler=async(req,res)=>{
       if(prev&&typeof prev.t==='number'&&prev.t>body.t)return res.status(200).json({ok:false,stale:true,state:prev});
       // 별 장부 합치기: 서버에 있던 기기별 별을 모두 살린다(같은 초기화 버전끼리만)
       if(prev&&prev.resetV===body.resetV&&(lvalid(prev.ledger)||lvalid(body.ledger)))ledgerApply(body,ledgerMerge(prev,body));
+      // 아빠 모드 비밀번호는 더 최근 것을 유지 (예전 화면·예전 기록이 덮어쓰지 않게)
+      {const pin=newerPin(prev&&prev.dadPin,body.dadPin);if(pin)body.dadPin=pin;else delete body.dadPin;}
       // 같은 버전(resetV)끼리는 모은 기록이 줄어드는 저장을 받지 않아요
       if(prev&&prev.resetV===body.resetV&&losesProgress(body,prev))return res.status(200).json({ok:false,stale:true,behind:true,state:prev});
       await redis(['SET',key,JSON.stringify(body)]);return res.status(200).json({ok:true,wallet:body.wallet,cardPlays:body.cardPlays});
