@@ -18,9 +18,9 @@ function makeServer(){
   delete require.cache[require.resolve(path.join(ROOT,'api','state.js'))];
   const handler=require(path.join(ROOT,'api','state.js'));
   const log=[];
-  async function call(method,code,body){let status=200,out=null;
+  async function call(method,code,body,query){let status=200,out=null;
     const res={setHeader(){},status(s){status=s;return res;},json(o){out=o;return res;},end(){return res;}};
-    await handler({method,query:{code},body},res);log.push(method+' '+status+(out&&out.behind?' behind':'')+(out&&out.stale?' stale':''));return {status,out};}
+    await handler({method,query:Object.assign({},query||{},{code}),body},res);log.push(method+' '+status+(out&&out.behind?' behind':'')+(out&&out.stale?' stale':''));return {status,out};}
   return {db,call,log,state:code=>{const v=db.get('mathplay:'+code);return v?JSON.parse(v):null;}};
 }
 function blank(extra){return Object.assign({wallet:0,cardPlays:0,myGroup:'11',group:'11',setupDone:true,daily:{d:'2026-10-31',earned:0,plays:{},got:{}},done:{},stickers:[],grad:{},resetV:RESET_V,t:clock},extra||{});}
@@ -28,7 +28,7 @@ function blank(extra){return Object.assign({wallet:0,cardPlays:0,myGroup:'11',gr
 function makeDevice(name,server,init){
   const ls=new Map();const timers=[];
   const el={classList:{toggle(){},contains(){return true;},add(){},remove(){}},textContent:'',before(){},querySelectorAll(){return [];}};
-  const skew=Number(init.__skew)||0;delete init.__skew;
+  const skew=Number(init.__skew)||0;delete init.__skew;const extra=init.__ctx||null;delete init.__ctx;
   class DevDate extends Date{constructor(...a){super(...(a.length?a:[clock+skew]));} static now(){clock+=1000;return clock+skew;}}
   const ctx={P:JSON.parse(JSON.stringify(init)),SYNC_KEYS,RESET_V,Date:DevDate,JSON,Math,Number,String,Object,Array,console,
     fixGroups(){},applyReset(){return false;},GROUPS:new Proxy({},{get:()=>({voice:false})}),voice:{on:false},audio:{win(){}},
@@ -39,8 +39,9 @@ function makeDevice(name,server,init){
     document:{addEventListener(){},visibilityState:'hidden'},window:{addEventListener(){}},
     setTimeout:(fn)=>{timers.push(fn);return timers.length;},clearTimeout:(id)=>{if(id)timers[id-1]=null;},setInterval(){},
     fetch:async(url,opts)=>{const u=new URL(url,'https://x/');const method=(opts&&opts.method)||'GET';
-      const {status,out}=await server.call(method,u.searchParams.get('code'),opts&&opts.body?JSON.parse(opts.body):undefined);
+      const {status,out}=await server.call(method,u.searchParams.get('code'),opts&&opts.body?JSON.parse(opts.body):undefined,Object.fromEntries(u.searchParams));
       return {status,json:async()=>out};}};
+  if(extra)Object.assign(ctx,extra); // 아이 프로필 등 1-helpers.js 쪽 함수 흉내
   vm.createContext(ctx);
   const api=vm.runInContext(CLOUD_SRC+'\n;({CLOUD,cloudBackups:typeof cloudBackups==="function"?cloudBackups:()=>[],cloudMergeStage:typeof cloudMergeStage==="function"?cloudMergeStage:null})',ctx);
   return {name,ctx,api,
