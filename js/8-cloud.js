@@ -113,6 +113,7 @@ function cloudMerge(L,R){
     else m.daily=cloudClone(L.daily.d>R.daily.d?L.daily:R.daily);
   }
   if(L.stageProgress||R.stageProgress)m.stageProgress=cloudMergeStage(base.stageProgress,other.stageProgress);
+  {const pin=cloudNewerPin(L.dadPin,R.dadPin);if(pin)m.dadPin=pin;} // 아빠 모드 비밀번호는 더 최근 것
   m.t=Math.max(Date.now(),n(L.t)+1,n(R.t)+1);
   return m;
 }
@@ -201,13 +202,15 @@ const STAR={
     if(!this.shared()||this.syncing)return;this.syncing=true;
     try{let b=this.get();
       // 시간값(t)을 일부러 안 보냄: 이 기능을 모르는 예전 서버는 일반 저장으로 받지 않고 거절(기본 칸 기록 덮어쓰기 방지)
-      if(b.pending){const r=await fetch(`${CLOUD.api}?code=${this.base()}&mode=stars`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ledger:b.ledger,resetV:RESET_V})});
-        const j=await r.json();if(j&&ledgerValid(j.ledger)){b=this.get();b.ledger=ledgerMerge({ledger:b.ledger},{ledger:j.ledger});b.pending=false;b.known=true;this.put(b);}}
+      if(b.pending){const r=await fetch(`${CLOUD.api}?code=${this.base()}&mode=stars`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ledger:b.ledger,resetV:RESET_V,dadPin:b.dadPin||undefined})});
+        const j=await r.json();if(j&&ledgerValid(j.ledger)){b=this.get();b.ledger=ledgerMerge({ledger:b.ledger},{ledger:j.ledger});b.dadPin=cloudNewerPin(b.dadPin,j.dadPin);b.pending=false;b.known=true;this.put(b);}}
       else{const r=await fetch(`${CLOUD.api}?code=${this.base()}&_=${Date.now()}`,{cache:'no-store'});const j=await r.json();
-        if(j&&j.state){b=this.get();b.ledger=ledgerValid(j.state.ledger)?ledgerMerge({ledger:b.ledger},{ledger:j.state.ledger}):ledgerMerge({ledger:b.ledger},{ledger:ledgerOf(j.state)});b.known=true;this.put(b);}}
+        if(j&&j.state){b=this.get();b.ledger=ledgerValid(j.state.ledger)?ledgerMerge({ledger:b.ledger},{ledger:j.state.ledger}):ledgerMerge({ledger:b.ledger},{ledger:ledgerOf(j.state)});b.dadPin=cloudNewerPin(b.dadPin,j.state.dadPin);b.known=true;this.put(b);}}
     }catch(e){}finally{this.syncing=false;try{if(typeof renderHome==='function'&&$('#home')&&!$('#home').classList.contains('hidden'))renderHome();}catch(e){}}
   }
 };
+/* 👨 아빠 모드 비밀번호 기록(해시): 더 최근에 정한 것 */
+function cloudNewerPin(a,b){const ok=r=>!!(r&&typeof r==='object'&&typeof r.h==='string'&&typeof r.s==='string');a=ok(a)?a:null;b=ok(b)?b:null;if(!a)return b;if(!b)return a;return (Number(b.t)||0)>(Number(a.t)||0)?b:a;}
 function starWallet(){return STAR.wallet();}
 function starEarn(p,n){if(STAR.shared())STAR.add(n,0);else cloudEarn(p,n);}
 function starSpendCard(p){if(STAR.shared())STAR.add(0,1);else cloudSpendCard(p);}

@@ -3,7 +3,8 @@
 // 'group'(지금 보고 있는 학기)은 기기마다 따로 — 한 기기에서 학기를 바꿔도 다른 기기 화면은 그대로 [2026-11-01]
 // 'ledger' = 기기별 별 장부(js/8-cloud.js) — 두 기기가 동시에 별을 받아도 모두 더해짐
 // 'myGroup'(학년)은 아이 프로필로 자동 계산 — 다른 기기에서 바꿔도 이 기기 학년은 그대로 [2026-11-01]
-const SYNC_KEYS=['wallet','cardPlays','daily','done','stickers','setupDone','grad','resetV','stageProgress','ledger'];
+// 'dadPin' = 아빠 모드 비밀번호 기록(해시만) — 가족 기본 칸으로 모든 기기에 같이 적용
+const SYNC_KEYS=['wallet','cardPlays','daily','done','stickers','setupDone','grad','resetV','stageProgress','ledger','dadPin'];
 const b64e=s=>btoa(unescape(encodeURIComponent(s))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 const b64d=s=>decodeURIComponent(escape(atob(s.replace(/-/g,'+').replace(/_/g,'/')+'==='.slice((s.length+3)%4))));
 function syncPack(){const o={};SYNC_KEYS.forEach(k=>{if(P[k]!==undefined)o[k]=P[k];});o.stickers=(P.stickers||[]).slice();o.t=Date.now();return b64e(JSON.stringify(o));}
