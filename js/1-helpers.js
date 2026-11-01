@@ -7,7 +7,28 @@ const gcd=(a,b)=>b?gcd(b,a%b):a;
 const fmt=n=>Number(n).toLocaleString('ko-KR');
 const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 const cmpAns=(a,b)=>a>b?'>':'<';
-const store={load(){try{return JSON.parse(localStorage.getItem('mathplay-all-v1')||'{}')}catch(e){return {}}},save(d){try{localStorage.setItem('mathplay-all-v1',JSON.stringify(d))}catch(e){}}};
+/* 👧👦 아이 프로필 [2026-11-01] — 기기마다 "누가 하는지"를 골라요(기기마다 따로 기억, 다른 기기에 영향 없음).
+   아이마다 기록·별·하루 상한·진도·스티커가 따로예요. 같은 가족 코드를 쓰고, 나은이 기록은 서버에 "가족코드+NE"로 따로 저장돼요.
+   학년은 태어난 해와 오늘 날짜로 자동 계산: 3~8월 1학기, 9~2월 2학기 (1~2월은 지난 학년 2학기).
+   별·진도는 자기 학년 학기와 그보다 높은 학기만 인정, 더 낮은 학기는 복습(별 없음). 지금까지의 기록은 시원이 것. */
+const KID_PROFILES={siwon:{name:'최시원',birth:2017,emoji:'🦖',store:'mathplay-all-v1'},naeun:{name:'최나은',birth:2020,emoji:'🐰',store:'mathplay-all-v1-naeun'}};
+const KID_KEY='mathplay-kid',KID_CODE_SUFFIX='NE';
+let KID=(()=>{try{const k=localStorage.getItem(KID_KEY);return KID_PROFILES[k]?k:null;}catch(e){return null;}})();
+function kidGrade(kid,now){
+  kid=kid||KID;now=now||new Date();const k=KID_PROFILES[kid];if(!k)return null;
+  const y=now.getFullYear(),m=now.getMonth()+1,schoolYear=m>=3?y:y-1,grade=schoolYear-(k.birth+7)+1,sem=m>=3&&m<=8?1:2;
+  if(grade<1)return {grade:0,sem:0,group:'11',label:(y-k.birth+1)+'세 (취학 전)'};
+  if(grade>4)return {grade,sem,group:'42',label:grade+'학년 '+sem+'학기'};
+  return {grade,sem,group:''+grade+sem,label:grade+'학년 '+sem+'학기'};
+}
+/* 그 학기를 풀면 별·진도를 인정하는지: 아이 학년 학기와 같거나 더 높으면 인정 */
+function gradeAllows(group,kid){const g=kidGrade(kid);if(!g)return true;const order=['11','12','21','22','31','32','41','42'];return order.indexOf(group)>=order.indexOf(g.group);}
+const kidTag=()=>KID_PROFILES[KID]?KID_PROFILES[KID].emoji+' '+KID_PROFILES[KID].name+' · '+kidGrade().label:'';
+function kidApply(o){o=o||P;const g=kidGrade();if(g)o.myGroup=g.group;}
+/* 가족 코드: 사람은 늘 같은 코드(예: JX2K-VSKA)를 쓰고, 나은이 기록은 서버에 '코드+NE'로 따로 저장 */
+const kidCodeBase=c=>{c=String(c||'');return c.length>8&&c.endsWith(KID_CODE_SUFFIX)?c.slice(0,-KID_CODE_SUFFIX.length):c;};
+const kidCodeFor=(base,kid)=>{base=kidCodeBase(base);return base&&(kid||KID)==='naeun'?base+KID_CODE_SUFFIX:base;};
+const store={key(){return (KID_PROFILES[KID]&&KID_PROFILES[KID].store)||'mathplay-all-v1';},load(){try{return JSON.parse(localStorage.getItem(this.key())||'{}')}catch(e){return {}}},save(d){try{localStorage.setItem(this.key(),JSON.stringify(d))}catch(e){}}};
 let P=store.load();P.group=P.group||'11';P.stickers=P.stickers||[];P.done=P.done||{};P.cardPlays=P.cardPlays||0;
 const DAILY_CAP=6,SAME_LIMIT=1; // 하루 별 상한 6개, 같은 단원은 하루 1번만 별
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}; // 현지 날짜 기준
@@ -22,6 +43,15 @@ function applyReset(o){if(o.resetV===RESET_V)return false;
   o.resetV=RESET_V;fixGroups(o);return true;}
 if(applyReset(P))store.save(P);
 fixGroups(P);
+/* 아이 프로필 적용: 처음 고른 아이면 그 학년 학기로 시작, 가족 코드는 다른 아이 기록에서 이어받음 */
+(function kidInit(){
+  if(!KID)return;let changed=false;
+  if(P.kid!==KID){P.kid=KID;P.group=kidGrade().group;P.setupDone=true;changed=true;}
+  if(!P.family){const other=KID==='naeun'?'siwon':'naeun';let of='';try{of=(JSON.parse(localStorage.getItem(KID_PROFILES[other].store)||'{}').family)||'';}catch(e){}
+    if(of){P.family=kidCodeFor(of);changed=true;}}
+  else if(P.family!==kidCodeFor(P.family)){P.family=kidCodeFor(P.family);changed=true;} // 아이와 맞지 않는 코드는 바로잡기
+  kidApply(P);if(changed)store.save(P);
+})();
 if(P.wallet==null)P.wallet=0;
 const CARD_URL='https://siwon-card-nori.vercel.app/',CARD_COST=5;
 const cardPlays=()=>Math.floor(P.wallet/CARD_COST);

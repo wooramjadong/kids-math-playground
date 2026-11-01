@@ -17,8 +17,8 @@ const STAR_RULE='80점 이상 별1 · 100점 별2 · 상 8개 모두 정답 +1';
 const nextGroup=g=>ORDER[ORDER.indexOf(g)+1]||null;
 const isY=()=>P.group==='11'||P.group==='12';
 const modesNow=()=>CUR[P.group].modes;
-// [2026-11-01] 어느 학기·어느 단계든 골라서 풀고 별·진도를 받아요. '내 학년'은 처음 보여 줄 학기예요.
-const eligibleNow=()=>true;
+// [2026-11-01] 단계는 아무거나 골라도 되고, 별·진도는 아이 학년 학기와 그보다 높은 학기만 인정(낮은 학기는 복습).
+const eligibleNow=()=>gradeAllows(P.group);
 const modeInfo=id=>modesNow().find(m=>m.id===id);
 const STICKERS=['🦁','🐼','🦊','🐰','🐨','🦄','🐙','🦖','🐳','🦋','🌈','🍩','🚀','🎸','🏆','🎁','🐯','🐧','🦉','🍭'];
 function makePlan(){return ['low','low',...shuffle([...Array(LV_COUNT.mid).fill('mid'),...Array(LV_COUNT.high).fill('high')])];}
@@ -36,11 +36,12 @@ function renderHome(){
  $('#heroTitle').textContent=g.title;$('#heroDesc').textContent='학기마다 12단계 · 원하는 단계를 골라서 해도 돼요 · 단계마다 연습 1판 + 도전 통과 2회';
  $('#legend').innerHTML='<span class="badge g">'+g.sub+'</span><span class="stage-pill">현재 '+(r.level>12?'12단계 모두 완료':current+' / 12단계')+'</span><span class="lvline">한 판 20문제 = 현재 범위 15 + 앞 단원 응용 5<br>하 2 · 중 10 · 상 8 (KMA 중상 목표 사고력)</span>';
  const dy=daily();$('#totalStars').textContent=P.wallet;renderCard();
+ let kp=$('#kidPill');if(!kp&&$('#gearBtn')){kp=document.createElement('button');kp.id='kidPill';kp.className='iconbtn kidpill';kp.title='누가 할까요? (아이 바꾸기)';$('#gearBtn').before(kp);kp.onclick=()=>renderSetup(false);}if(kp)kp.textContent=KID_PROFILES[KID]?KID_PROFILES[KID].emoji+' '+KID_PROFILES[KID].name.slice(1):'👤 누구?';
  const clear=Object.values(r.steps).filter(x=>x.complete).length;
- $('#eligible').innerHTML='<span class="ok">'+(P.group===P.myGroup?'내 학년 · ':'')+'오늘 별 '+dy.earned+' / '+DAILY_CAP+'</span>'+'<span class="hint">'+STAR_RULE+' · 같은 단계는 하루 1번만 별</span><span class="hint">단계 완료 '+clear+' / 12 · '+(r.level>12?'학기 완료':'연습 후 도전 2회: 80점 이상, 상 6/8 이상 (12단계는 90점)')+'</span>';
+ $('#eligible').innerHTML=(mine?'<span class="ok">'+kidTag()+' · 오늘 별 '+dy.earned+' / '+DAILY_CAP+'</span>':'<span class="warn">'+kidTag()+' · 더 낮은 학기는 복습이라 별·진도가 없어요</span>')+'<span class="hint">'+STAR_RULE+' · 같은 단계는 하루 1번만 별</span><span class="hint">단계 완료 '+clear+' / 12 · '+(r.level>12?'학기 완료':'연습 후 도전 2회: 80점 이상, 상 6/8 이상 (12단계는 90점)')+'</span>';
  const stageCard=n=>{
   const info=STAGE_SYSTEM.meta(P.group,n),st=STAGE_SYSTEM.step(P,P.group,n),locked=false; // 단계는 순서 없이 골라도 돼요
-  const state=st.complete?'완료 · 복습':STAGE_SYSTEM.phase(P,P.group,n);
+  const state=!mine?'복습 (별·진도 없음)':st.complete?'완료 · 복습':STAGE_SYSTEM.phase(P,P.group,n);
   return '<button class="mode stage-card '+(st.complete?'stage-done':n===r.level?'stage-current':'')+'" '+(locked?'disabled':'')+' onclick="startStage('+n+')"><span class="stage-number">'+n+'단계</span><span class="t display">'+info.title+'</span><span class="s">'+info.kind+'</span><span class="stage-state">'+state+'</span>'+(st.best?'<span class="best">최고 '+st.best+'점</span>':'')+'</button>';
  };
  // 홈에는 지금 할 단계 하나만, 나머지는 "전체 12단계 보기"를 눌러야 펼쳐져요
@@ -51,11 +52,19 @@ function renderHome(){
  $('#stickers').innerHTML='<span class="lbl">내 스티커판 ('+P.stickers.length+'개)</span>'+(P.stickers.length?P.stickers.map(t=>'<span class="st">'+t+'</span>').join(''):'<span class="empty">문제를 풀고 첫 스티커를 받아 보세요!</span>');
 }
 function gradProgress(g){const r=STAGE_SYSTEM.record(P,g);return {n:Object.values(r.steps).filter(s=>s.complete).length,total:12};}
+/* 👧👦 누가 할까요? — 아이를 고르면 그 아이 기록으로 다시 열려요(이 기기만, 다른 기기는 그대로) */
+function chooseKid(id){
+  if(!KID_PROFILES[id])return;
+  if(id===KID){$('#setup').classList.add('hidden');return;}
+  try{if(typeof CLOUD!=='undefined'&&CLOUD.on()){clearTimeout(CLOUD.pushTimer);fetch(`${CLOUD.api}?code=${CLOUD.code()}`,{method:'PUT',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify(CLOUD.pack())});}}catch(e){}
+  try{localStorage.setItem(KID_KEY,id);}catch(e){}
+  location.reload();
+}
 function renderSetup(first){
-  $('#setup').classList.remove('hidden');$('#setupTitle').textContent=first?'누가 할까요?':'내 학년 바꾸기';
-  $('#setupList').innerHTML=ORDER.map(g=>`<button class="level ${g===P.myGroup?'on':''}" data-g="${g}"><div><div class="lt display">${GROUPS[g].label}</div><div class="ls">${GROUPS[g].sub}</div></div><div class="dots">${g===P.myGroup?'✔':''}</div></button>`).join('');
-  $('#setupList').querySelectorAll('button').forEach(b=>b.onclick=()=>{P.myGroup=b.dataset.g;P.group=b.dataset.g;store.save(P);$('#setup').classList.add('hidden');voice.on=GROUPS[P.group].voice;$('#voiceBtn').classList.toggle('off',!voice.on);goHome();audio.tap();});
-  $('#setupClose').classList.toggle('hidden',first);
+  $('#setup').classList.remove('hidden');$('#setupTitle').textContent='누가 할까요?';
+  $('#setupList').innerHTML=Object.keys(KID_PROFILES).map(id=>{const k=KID_PROFILES[id],g=kidGrade(id);return `<button class="level ${id===KID?'on':''}" data-kid="${id}"><div><div class="lt display">${k.emoji} ${k.name}</div><div class="ls">${g.label} · ${g.grade?GROUPS[g.group].sub+'부터 별':'1학년 1학기부터 별'}</div></div><div class="dots">${id===KID?'✔':''}</div></button>`;}).join('');
+  $('#setupList').querySelectorAll('button').forEach(b=>b.onclick=()=>chooseKid(b.dataset.kid));
+  $('#setupClose').classList.toggle('hidden',first||!KID);
 }
 $('#setupClose').onclick=()=>$('#setup').classList.add('hidden');
 $('#gearBtn').onclick=()=>renderSetup(false);
@@ -81,7 +90,7 @@ function startRound(mode,opts={}){
  stopTimer();const stage=Number(opts.stage)||Number(String(mode).replace('stage',''))||Math.min(12,STAGE_SYSTEM.record(P,P.group).level);
  const unitPractice=!!opts.unitPractice,record=STAGE_SYSTEM.record(P,P.group),info=STAGE_SYSTEM.meta(P.group,stage);
  const plan=STAGE_SYSTEM.plan(P.group,stage,Math.random,unitPractice?mode:null);
- S={group:P.group,mode,stage,unitPractice,official:!unitPractice,eligible:!unitPractice,phase:unitPractice?'단원 자유 연습':STAGE_SYSTEM.phase(P,P.group,stage),title:unitPractice?CUR[P.group].modes.find(m=>m.id===mode).title:info.title,
+ S={group:P.group,mode,stage,unitPractice,official:!unitPractice&&eligibleNow(),eligible:!unitPractice&&eligibleNow(),phase:unitPractice?'단원 자유 연습':!eligibleNow()?'복습 (학년보다 낮은 학기)':STAGE_SYSTEM.phase(P,P.group,stage),title:unitPractice?CUR[P.group].modes.find(m=>m.id===mode).title:info.title,
  i:0,total:TOTAL,plan,correct:0,answeredCount:0,combo:0,maxCombo:0,q:null,answered:false,fields:{},active:null,cells:new Set(),seen:new Set(),log:[],highOk:0,reviewCorrect:0,currentCorrect:0,fingerprints:[]};
  nextQuestion();show('play');
 }
@@ -234,9 +243,9 @@ function advance(){clearTimeout(S.autoTimer);if(S.finished||!S.answered)return;S
 /* 결과 + 별 규칙 */
 function endRound(){
  if(S.finished)return;S.finished=true;stopTimer();const score=S.correct*5,highTotal=8,stars=roundStars(S.correct,S.highOk,highTotal),dy=daily(),key=S.group+':stage'+S.stage;
- const currentlyEligible=S.eligible; // 어느 학기든 별 (하루 6개, 같은 단계는 하루 1번)
+ const currentlyEligible=S.eligible; // 아이 학년 이상 학기만 별 (하루 6개, 같은 단계는 하루 1번)
  let earn=stars,why='';
- if(!currentlyEligible){earn=0;why='연습 모드: 별·진도는 바뀌지 않아요.';}
+ if(!currentlyEligible){earn=0;why=S.unitPractice?'단원 자유 연습은 별·진도가 없어요.':(KID_PROFILES[KID]?KID_PROFILES[KID].name+'은(는) '+kidGrade().label+'예요. 더 낮은 학기는 복습이라 별·진도가 없어요.':'연습 모드: 별·진도는 바뀌지 않아요.');}
  else if(!stars){why='80점 이상이거나 상 8개를 모두 맞히면 별을 받아요.';}
  else if(dy.got[key]){earn=0;why='이 단계는 오늘 이미 별을 받았어요. 진도 도전은 계속할 수 있어요.';}
  else if(dy.earned>=DAILY_CAP){earn=0;why='오늘 별을 모두 모았어요. 진도는 계속 진행할 수 있어요.';}
@@ -258,7 +267,7 @@ function endRound(){
 function showNews(){
  const box=document.createElement('div');box.className='modal';document.body.appendChild(box);
  box.innerHTML='<div class="modalbox card"><h2 class="display">학기마다 12단계 수학 여행</h2><p>한 판 20문제: 현재 범위 15 + 앞 단원 응용 5</p><p>단계마다 연습 1판 후 도전 2회 통과. 기존 별·스티커·카드놀이·단원 기록은 유지해요. 새 단계 기록만 1단계부터 시작해요.</p><button class="btn purple" id="newsOk">시작하기</button></div>';
- $('#newsOk').onclick=()=>{box.remove();P.news=false;store.save(P);if(!P.setupDone){renderSetup(true);P.setupDone=true;store.save(P);}};
+ $('#newsOk').onclick=()=>{box.remove();P.news=false;store.save(P);if(!KID||!P.setupDone){renderSetup(true);if(KID){P.setupDone=true;store.save(P);}}};
 }
 
 /* 초기화 */
@@ -267,4 +276,4 @@ fixGroups(P);
 voice.on=GROUPS[P.group].voice;$('#voiceBtn').classList.toggle('off',!voice.on);
 renderHome();
 if(P.news)showNews();
-else if(!P.setupDone){renderSetup(true);P.setupDone=true;store.save(P);}
+else if(!KID||!P.setupDone){renderSetup(true);if(KID){P.setupDone=true;store.save(P);}}

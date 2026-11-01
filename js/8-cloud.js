@@ -158,7 +158,7 @@ const CLOUD={api:'api/state',pushTimer:null,pulling:false,status:'',last:0,remot
     }catch(e){this.status='offline';}finally{this.pulling=false;renderCloudBadge();}
   },
   applyRemote(s){const fam=P.family;SYNC_KEYS.forEach(k=>{if(s[k]!==undefined)P[k]=cloudClone(s[k]);});if(!ledgerValid(s.ledger))delete P.ledger;else ledgerApply(P);P.t=s.t||Date.now();P.family=fam;
-    fixGroups(P);const stale=s.resetV!==RESET_V;if(stale){P.resetV=null;applyReset(P);P.news=false;}
+    fixGroups(P);if(typeof kidApply==='function')kidApply(P);const stale=s.resetV!==RESET_V;if(stale){P.resetV=null;applyReset(P);P.news=false;}
     if(stale)store.save(P);else _storeSaveRaw(P);voice.on=GROUPS[P.group].voice;$('#voiceBtn').classList.toggle('off',!voice.on);
     if(!$('#home').classList.contains('hidden'))renderHome();},
   schedulePush(){if(!this.on())return;clearTimeout(this.pushTimer);this.pushTimer=setTimeout(()=>this.push(),700);},
@@ -183,6 +183,9 @@ store.save=function(d){d.t=Date.now();_storeSaveRaw(d);CLOUD.schedulePush();};
 const CODE_CHARS='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const newCode=()=>Array.from({length:8},()=>CODE_CHARS[Math.floor(Math.random()*CODE_CHARS.length)]).join('');
 const fmtCode=c=>c?c.slice(0,4)+'-'+c.slice(4):'';
+/* 아이 프로필(js/1-helpers.js)이 있으면 아이별 서버 칸으로, 화면에는 늘 기본 가족 코드 */
+const kidCode=c=>typeof kidCodeFor==='function'?kidCodeFor(c):c;
+const showCode=c=>typeof kidCodeBase==='function'?kidCodeBase(c):c;
 const cloudDesc=x=>`별 ${Number(x&&x.wallet)||0}개 · 스티커 ${((x&&x.stickers)||[]).length}개 · 카드놀이 ${Number(x&&x.cardPlays)||0}판`;
 const cloudTime=t=>{const d=new Date(t);return `${d.getMonth()+1}/${d.getDate()} ${d.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}`;};
 
@@ -190,7 +193,7 @@ function renderCloudBadge(){
   const el=$('#cloudBadge');if(!el)return;
   if(!CLOUD.on()){el.innerHTML='';return;}
   const st=CLOUD.status==='ok'?'☁️':CLOUD.status==='nostore'?'⚠️':CLOUD.status==='offline'?'📴':'☁️';
-  el.innerHTML=`<span class="cloudpill" title="가족 코드 ${fmtCode(CLOUD.code())}">${st} ${fmtCode(CLOUD.code())}</span>`;
+  el.innerHTML=`<span class="cloudpill" title="가족 코드 ${fmtCode(showCode(CLOUD.code()))}">${st} ${fmtCode(showCode(CLOUD.code()))}</span>`;
 }
 /* 🛟 백업에서 되살리기: 지금 기록과 합쳐서 되살려요 (모은 기록이 줄어들지 않아요) */
 function cloudBackupHtml(){
@@ -216,11 +219,11 @@ function renderCloudSection(){
   const sec=$('#cloudSec');if(!sec)return;
   if(CLOUD.on()){
     const st=CLOUD.status==='nostore'?'<div class="cloudwarn">⚠️ 서버 저장소가 아직 연결되지 않았어요. 지금은 이 기기에만 저장돼요.</div>':CLOUD.status==='offline'?'<div class="cloudwarn">📴 인터넷에 연결되면 자동으로 이어져요.</div>':'<div class="cloudok">✅ 이 코드를 넣은 모든 기기에서 이어서 해요</div>';
-    sec.innerHTML=`<div class="cloudhead">☁️ 가족 코드</div><div class="familycode">${fmtCode(CLOUD.code())}</div>
+    sec.innerHTML=`<div class="cloudhead">☁️ 가족 코드</div><div class="familycode">${fmtCode(showCode(CLOUD.code()))}</div>
       <p style="font-size:13px;color:var(--ink-soft);margin:4px 0 8px">다른 기기에서 ⚙️ → "코드 입력"에 이 코드를 넣으면 별·스티커가 그대로 이어져요.</p>${st}
       ${CLOUD.note?`<div style="font-size:12px;color:var(--ink-soft);margin-top:6px">🔄 ${CLOUD.note}</div>`:''}
       <div class="row" style="margin-top:8px"><button class="btn ghost" id="cloudCopy" style="flex:1">📋 코드 복사</button><button class="btn ghost" id="cloudOff" style="flex:1">연결 끊기</button></div>${cloudBackupHtml()}`;
-    $('#cloudCopy').onclick=async()=>{try{await navigator.clipboard.writeText(fmtCode(CLOUD.code()));$('#cloudCopy').textContent='✅ 복사됐어요';}catch(e){prompt('가족 코드',fmtCode(CLOUD.code()));}};
+    $('#cloudCopy').onclick=async()=>{try{await navigator.clipboard.writeText(fmtCode(showCode(CLOUD.code())));$('#cloudCopy').textContent='✅ 복사됐어요';}catch(e){prompt('가족 코드',fmtCode(showCode(CLOUD.code())));}};
     $('#cloudOff').onclick=()=>{if(confirm('이 기기를 가족 코드에서 끊을까요? (기록은 이 기기에 남아요)')){P.family='';_storeSaveRaw(P);renderCloudSection();renderCloudBadge();}};
   }else{
     sec.innerHTML=`<div class="cloudhead">☁️ 여러 기기에서 이어서 하기</div>
@@ -228,9 +231,9 @@ function renderCloudSection(){
       <button class="btn purple" id="cloudNew" style="width:100%">✨ 새 가족 코드 만들기 (이 기기 기록으로 시작)</button>
       <div style="display:flex;gap:8px;margin-top:8px"><input id="cloudIn" placeholder="코드 입력 (예: K7QM-4XZ2)" style="flex:1;font-size:18px;font-weight:700;letter-spacing:2px;text-transform:uppercase;border:3px solid var(--line);border-radius:12px;padding:10px;font-family:inherit;min-width:0"><button class="btn green" id="cloudJoin">연결</button></div>
       <div id="cloudMsg" style="font-size:13px;margin-top:6px;color:#92400E"></div>${cloudBackupHtml()}`;
-    $('#cloudNew').onclick=async()=>{P.family=newCode();CLOUD.remoteT=0;$('#cloudNew').textContent='만드는 중…';await CLOUD.push(true);renderCloudSection();renderCloudBadge();};
-    $('#cloudJoin').onclick=async()=>{const code=String($('#cloudIn').value||'').toUpperCase().replace(/[^A-Z0-9]/g,'');const msg=$('#cloudMsg');
-      if(code.length<6)return msg.textContent='코드를 다시 확인해 주세요.';msg.textContent='확인 중…';
+    $('#cloudNew').onclick=async()=>{P.family=kidCode(newCode());CLOUD.remoteT=0;$('#cloudNew').textContent='만드는 중…';await CLOUD.push(true);renderCloudSection();renderCloudBadge();};
+    $('#cloudJoin').onclick=async()=>{const base=String($('#cloudIn').value||'').toUpperCase().replace(/[^A-Z0-9]/g,'');const code=kidCode(base);const msg=$('#cloudMsg');
+      if(base.length<6)return msg.textContent='코드를 다시 확인해 주세요.';msg.textContent='확인 중…';
       try{const r=await fetch(`${CLOUD.api}?code=${code}&_=${Date.now()}`,{cache:'no-store'});
         if(r.status===503)return msg.textContent='서버 저장소가 아직 연결되지 않았어요. (Vercel에서 Upstash Redis 연결 필요)';
         const j=await r.json();const local=CLOUD.pack();
@@ -241,7 +244,7 @@ function renderCloudSection(){
           const s=j.state;const c=cloudCompare(local,s);
           const head=c==='ahead'?'이 기기 기록이 서버보다 더 많아요. 이 기기 기록을 올려서 이어갈까요?'
             :c==='diverged'?'두 기록이 서로 달라요. 두 기록을 합쳐서 이어갈까요?\n(모은 별·스티커는 줄어들지 않아요)'
-            :`가족 코드 ${fmtCode(code)}의 기록으로 이어서 할까요?`;
+            :`가족 코드 ${fmtCode(base)}의 ${typeof KID_PROFILES!=='undefined'&&KID_PROFILES[KID]?KID_PROFILES[KID].name+' ':''}기록으로 이어서 할까요?`;
           if(!confirm(`${head}\n\n서버: ${cloudDesc(s)}\n이 기기: ${cloudDesc(local)}\n\n바뀌기 전 기록은 이 기기에 백업해 둬요.`))return msg.textContent='';
           P.family=code;CLOUD.remoteT=0;await CLOUD.reconcile(s);
         }
