@@ -51,6 +51,21 @@ const handler=async(req,res)=>{
   const key='mathplay:'+code;
   try{
     if(req.method==='GET'){const r=await redis(['GET',key]);return res.status(200).json({state:r.result?JSON.parse(r.result):null});}
+    // ⭐ 가족 별(시원+나은) [2026-11-01]: 별 장부만 합치기. 다른 아이 기기가 별을 받거나 쓸 때 기본 칸에 보낸다.
+    // 진도·스티커 등 다른 기록은 그대로 두고, 기기별 칸마다 큰 값으로 합쳐서(여러 번 보내도 한 번만 셈) 저장한다.
+    if(String(req.query.mode||'')==='stars'&&(req.method==='PUT'||req.method==='POST')){
+      let body=req.body;if(typeof body==='string'){try{body=JSON.parse(body||'{}');}catch(e){body=null;}}
+      if(!body||!lvalid(body.ledger))return res.status(400).json({error:'bad_body'});
+      if(JSON.stringify(body).length>20000)return res.status(413).json({error:'too_big'});
+      const cur=await redis(['GET',key]);const prev=cur.result?JSON.parse(cur.result):null;
+      const next=prev?Object.assign({},prev):{resetV:body.resetV||null,stickers:[],done:{},grad:{}};
+      // 기본 칸에 장부가 아직 없으면 지금 별·카드놀이를 그대로 기준으로 (보낸 칸은 아직 여기에 없는 별)
+      const prevL=prev&&lvalid(prev.ledger)?prev.ledger:{v:1,base:{e:ln(prev&&prev.wallet)+5*ln(prev&&prev.cardPlays),c:ln(prev&&prev.cardPlays)},dev:{}};
+      ledgerApply(next,ledgerMerge({ledger:prevL},{ledger:body.ledger}));
+      next.t=Math.max(Number(prev&&prev.t)||0,Date.now())+1;
+      await redis(['SET',key,JSON.stringify(next)]);
+      return res.status(200).json({ok:true,ledger:next.ledger,wallet:next.wallet,cardPlays:next.cardPlays});
+    }
     if(req.method==='PUT'||req.method==='POST'){
       let body=req.body;if(typeof body==='string'){try{body=JSON.parse(body||'{}');}catch(e){body=null;}}
       if(!body||typeof body!=='object'||typeof body.t!=='number')return res.status(400).json({error:'bad_body'});
