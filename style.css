@@ -283,3 +283,6 @@ main{max-width:720px;margin:0 auto;padding:16px 14px 44px}
 .stage-all summary{cursor:pointer;font-weight:800;color:#5737b8}
 .stage-all .stage-help{margin:12px 0;padding:0;border:0;background:none}
 .stage-all #stageAllList{margin-top:4px}
+
+/* 👧👦 지금 하는 아이 (누르면 아이 바꾸기) */
+.iconbtn.kidpill{font-size:15px;font-weight:800;white-space:nowrap;padding:6px 10px;background:#fff7d6;border:2px solid #f4c430}
