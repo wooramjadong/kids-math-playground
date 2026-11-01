@@ -1,9 +1,10 @@
-/* 학기별 12단계. 한 판은 현재 범위 15 + 이전 범위 응용 5.
+/* 학기별 12단계. 한 판은 12문제 = 현재 범위 9 + 이전 범위 응용 3 (2026-11-01: 20문제 → 12문제).
    기존 wallet/done/grad/stickers는 지우지 않고 stageProgress만 별도로 추가한다. */
 const STAGE_SYSTEM=(()=>{
  const order=['11','12','21','22','31','32','41','42'];
  const version='12-stage-20q-v1';
- const mix={low:2,mid:10,high:8};
+ const mix={low:2,mid:6,high:4},QUESTIONS=12;
+ const scoreOf=st=>Math.round((Number(st.correct)||0)*100/(Number(st.total)||QUESTIONS)); // 맞힌 비율 → 100점 만점
  const clamp=n=>Math.max(1,Math.min(12,Math.trunc(Number(n))||1));
  const sh=(a,rng=Math.random)=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
  const dateNow=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
@@ -30,7 +31,7 @@ const STAGE_SYSTEM=(()=>{
   else if(n===10){core=modes.map(m=>m.id);title='조건을 연결해 추리하기';kind='사고력';}
   else if(n===11){core=modes.map(m=>m.id);title='거꾸로 생각해 해결하기';kind='사고력 심화';}
   else{core=modes.map(m=>m.id);title='학기 종합 관문';kind='졸업 평가';}
-  return {number:n,title,core,kind,passScore:n===12?90:80,highRequired:6};
+  return {number:n,title,core,kind,passScore:n===12?90:80,highRequired:3}; // 상 4문제 중 3개
  }
  function previous(g,n){
   const modes=CUR[g].modes;
@@ -46,13 +47,13 @@ const STAGE_SYSTEM=(()=>{
   let earlier=previous(g,n);
   if(onlyMode){const index=CUR[g].modes.findIndex(m=>m.id===onlyMode);earlier=previous(g,index+1);}
   const modeCycle=sh(core,rng);let ci=0;
-  const currentLevels=['low','low',...sh([...Array(7).fill('mid'),...Array(6).fill('high')],rng)];
+  const currentLevels=['low','low',...sh([...Array(4).fill('mid'),...Array(3).fill('high')],rng)]; // 현재 범위 9: 하2 중4 상3
   const current=currentLevels.map(lv=>({lv,source:'current',group:g,mode:modeCycle[(ci++)%modeCycle.length],stage:clamp(n)}));
   const recent=earlier.at(-1),oldCycle=sh(earlier,rng);let ri=0;
-  const reviewLevels=sh(['mid','mid','mid','high','high'],rng);
+  const reviewLevels=sh(['mid','mid','high'],rng); // 앞 단원 응용 3: 중2 상1
   const review=reviewLevels.map((lv,i)=>{const src=i<2?recent:oldCycle[(ri++)%oldCycle.length];return {...src,lv,source:'review',stage:Math.min(clamp(n),6)};});
   const result=[];let c=0,r=0;
-  for(let i=0;i<20;i++)result.push([3,7,11,15,19].includes(i)?review[r++]:current[c++]);
+  for(let i=0;i<QUESTIONS;i++)result.push([3,7,11].includes(i)?review[r++]:current[c++]);
   return result;
  }
  function applied(g,mode,lv,n){
@@ -82,12 +83,12 @@ const STAGE_SYSTEM=(()=>{
   const out={progressed:false,stageClear:false,semesterClear:false,training:false,passed:false,nextGroup:null};
   // [2026-11-01] 순서 없이 아무 단계나 골라도 그 단계 진도를 인정한다(이미 완료한 단계는 복습)
   if(!stats.official || s.complete)return {...out,practiceOnly:true};
-  s.rounds=(Number(s.rounds)||0)+1;s.best=Math.max(Number(s.best)||0,stats.correct*5);
-  s.last={score:stats.correct*5,highOk:stats.highOk,reviewCorrect:stats.reviewCorrect,date:stats.date||dateNow()};
+  s.rounds=(Number(s.rounds)||0)+1;s.best=Math.max(Number(s.best)||0,scoreOf(stats));
+  s.last={score:scoreOf(stats),highOk:stats.highOk,reviewCorrect:stats.reviewCorrect,date:stats.date||dateNow()};
   r.recent=[...r.recent,...(stats.fingerprints||[])].slice(-120);
   if(!s.training){s.training=true;out.training=true;out.progressed=true;}
   else{
-   out.passed=stats.correct*5>=info.passScore&&stats.highOk>=info.highRequired;
+   out.passed=scoreOf(stats)>=info.passScore&&stats.highOk>=info.highRequired;
    if(out.passed){s.passes++;out.progressed=true;}
    if(s.passes>=2){s.complete=true;s.date=stats.date||dateNow();out.stageClear=true;let lv=1;while(lv<=12&&r.steps[lv]?.complete===true)lv++;r.level=lv;}
   }
@@ -99,5 +100,5 @@ const STAGE_SYSTEM=(()=>{
   }
   return out;
  }
- return {order,version,mix,record,step,meta,previous,plan,generate,finish,phase,fingerprint};
+ return {order,version,mix,QUESTIONS,scoreOf,record,step,meta,previous,plan,generate,finish,phase,fingerprint};
 })();
