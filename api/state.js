@@ -19,6 +19,26 @@ function progressOf(s){
 }
 function losesProgress(next,prev){const a=progressOf(next),b=progressOf(prev);return Object.keys(a).some(k=>a[k]<b[k]);}
 
+// ⭐ 별 장부 [2026-11-01] (js/8-cloud.js와 같은 규칙): 기기별 칸(dev)에 받은 별(e)·카드놀이(c)를 적고
+// 저장할 때마다 서버 기록과 기기별로 합쳐서, 두 기기가 동시에 받은 별이 덮어쓰여 사라지지 않게 한다.
+// 장부를 모르는 예전 화면이 올린 기록은 늘어난 별만 장부 기준(base)에 반영된다.
+const ln=v=>Math.max(0,Number(v)||0);
+const lvalid=L=>!!(L&&typeof L==='object'&&L.dev&&typeof L.dev==='object'&&L.base&&typeof L.base==='object');
+function ledgerOf(s,other){
+  if(s&&lvalid(s.ledger))return s.ledger;
+  const E=ln(s&&s.wallet)+5*ln(s&&s.cardPlays),C=ln(s&&s.cardPlays);
+  let de=0,dc=0;const o=other&&lvalid(other.ledger)?other.ledger:null;
+  if(o)for(const k in o.dev){de+=ln(o.dev[k]&&o.dev[k].e);dc+=ln(o.dev[k]&&o.dev[k].c);}
+  return {v:1,base:{e:Math.max(0,E-de),c:Math.max(0,C-dc)},dev:{}};
+}
+function ledgerMerge(a,b){
+  const A=ledgerOf(a,b),B=ledgerOf(b,a);
+  const m={v:1,base:{e:Math.max(ln(A.base.e),ln(B.base.e)),c:Math.max(ln(A.base.c),ln(B.base.c))},dev:{}};
+  for(const L of [A,B])for(const k in L.dev){const x=L.dev[k]||{},y=m.dev[k]||{e:0,c:0};m.dev[k]={e:Math.max(ln(y.e),ln(x.e)),c:Math.max(ln(y.c),ln(x.c))};}
+  return m;
+}
+function ledgerApply(s,L){let e=ln(L.base.e),c=ln(L.base.c);for(const k in L.dev){e+=ln(L.dev[k].e);c+=ln(L.dev[k].c);}s.ledger=L;s.cardPlays=c;s.wallet=Math.max(0,e-5*c);return s;}
+
 const handler=async(req,res)=>{
   res.setHeader('Cache-Control','no-store');
   res.setHeader('Access-Control-Allow-Origin','*');
@@ -37,12 +57,14 @@ const handler=async(req,res)=>{
       const s=JSON.stringify(body);if(s.length>100000)return res.status(413).json({error:'too_big'});
       const cur=await redis(['GET',key]);const prev=cur.result?JSON.parse(cur.result):null;
       if(prev&&typeof prev.t==='number'&&prev.t>body.t)return res.status(200).json({ok:false,stale:true,state:prev});
+      // 별 장부 합치기: 서버에 있던 기기별 별을 모두 살린다(같은 초기화 버전끼리만)
+      if(prev&&prev.resetV===body.resetV&&(lvalid(prev.ledger)||lvalid(body.ledger)))ledgerApply(body,ledgerMerge(prev,body));
       // 같은 버전(resetV)끼리는 모은 기록이 줄어드는 저장을 받지 않아요
       if(prev&&prev.resetV===body.resetV&&losesProgress(body,prev))return res.status(200).json({ok:false,stale:true,behind:true,state:prev});
-      await redis(['SET',key,s]);return res.status(200).json({ok:true});
+      await redis(['SET',key,JSON.stringify(body)]);return res.status(200).json({ok:true,wallet:body.wallet,cardPlays:body.cardPlays});
     }
     return res.status(405).json({error:'method'});
   }catch(e){return res.status(502).json({error:'store_error',detail:String(e.message||e)});}
 };
-handler.progressOf=progressOf;handler.losesProgress=losesProgress;
+handler.progressOf=progressOf;handler.losesProgress=losesProgress;handler.ledgerMerge=ledgerMerge;
 module.exports=handler;
