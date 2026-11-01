@@ -27,15 +27,25 @@ test('기존 별·스티커·단원 최고기록·카드 횟수를 보존하며 
  const p={group:'11',myGroup:'11',wallet:19,stickers:['a'],cardPlays:4,done:{11:{n9:{stars:3,best:100}}},grad:{11:'old'}};const preserved=JSON.stringify(p);
  assert.equal(api.record(p,'11').level,1);const {stageProgress,...rest}=p;assert.equal(JSON.stringify(rest),preserved);assert.equal(stageProgress.version,'12-stage-20q-v1');
 });
-test('연습1판+도전2회 이전에는 단계가 열리지 않으며 80점·상6개 모두 필요',()=>{
+test('연습1판+도전2회를 해야 단계 완료, 80점·상6개 모두 필요',()=>{
  const p={group:'11',myGroup:'11'};assert.equal(api.finish(p,'11',1,{...good,correct:0,highOk:0}).training,true);assert.equal(api.record(p,'11').level,1);
  assert.equal(api.finish(p,'11',1,{...good,correct:16,highOk:5}).passed,false);assert.equal(api.finish(p,'11',1,{...good,correct:15,highOk:8}).passed,false);
  assert.equal(api.finish(p,'11',1,{...good,correct:16,highOk:6}).passed,true);assert.equal(api.record(p,'11').level,1);
  assert.equal(api.finish(p,'11',1,{...good,correct:16,highOk:6}).stageClear,true);assert.equal(api.record(p,'11').level,2);
 });
-test('미래단계·완료단계·다른학기 연습은 진도에 반영하지 않음',()=>{
- const p={group:'11',myGroup:'11'};assert.equal(api.finish(p,'11',2,good).practiceOnly,true);assert.equal(api.record(p,'11').level,1);
- assert.equal(api.finish(p,'11',1,{...good,official:false}).practiceOnly,true);assert.equal(api.step(p,'11',1).training,false);
+test('[2026-11-01] 단계는 순서 없이 골라도 그 단계 진도를 인정 (현재 단계는 앞에서부터 처음 안 끝난 단계)',()=>{
+ const p={group:'11',myGroup:'11'};const r2=api.finish(p,'11',5,good);assert.equal(r2.practiceOnly,undefined);assert.equal(r2.training,true);assert.equal(api.record(p,'11').level,1);
+ api.finish(p,'11',5,good);assert.equal(api.finish(p,'11',5,good).stageClear,true);assert.equal(api.step(p,'11',5).complete,true);assert.equal(api.record(p,'11').level,1,'1단계가 아직이면 현재 단계는 1');
+ assert.equal(api.finish(p,'11',5,good).practiceOnly,true,'끝낸 단계는 복습');
+ for(let k=0;k<3;k++)api.finish(p,'11',1,good);assert.equal(api.record(p,'11').level,2);
+ assert.equal(api.finish(p,'11',1,{...good,official:false}).practiceOnly,true,'단원 자유 연습은 진도 없음');
+});
+test('[2026-11-01] 다른 학기도 골라서 진도를 쌓을 수 있고, 내 학년은 바뀌지 않음(그 학기 12단계를 다 끝내기 전엔)',()=>{
+ const p={group:'32',myGroup:'11'};for(let k=0;k<3;k++)api.finish(p,'32',3,good);assert.equal(api.step(p,'32',3).complete,true);assert.equal(p.myGroup,'11');
+});
+test('[2026-11-01] 12단계를 모두 끝내야 학기 졸업 (12단계만 먼저 끝내면 졸업 아님)',()=>{
+ const p={group:'11',myGroup:'11'};for(let k=0;k<3;k++)api.finish(p,'11',12,{...good,correct:18});assert.equal(api.step(p,'11',12).complete,true);assert.ok(!(p.grad&&p.grad['11']));assert.equal(p.myGroup,'11');
+ let last;for(let n=1;n<=11;n++)for(let k=0;k<3;k++)last=api.finish(p,'11',n,good);assert.equal(last.semesterClear,true);assert.ok(p.grad['11']);assert.equal(p.myGroup,'12');
 });
 test('12단계는 90점 기준, 통과 후 다음학기1단계로 자동 진급',()=>{
  for(let gi=0;gi<groups.length;gi++){
