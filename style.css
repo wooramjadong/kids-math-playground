@@ -286,3 +286,15 @@ main{max-width:720px;margin:0 auto;padding:16px 14px 44px}
 
 /* 👧👦 지금 하는 아이 (누르면 아이 바꾸기) */
 .iconbtn.kidpill{font-size:15px;font-weight:800;white-space:nowrap;padding:6px 10px;background:#fff7d6;border:2px solid #f4c430}
+
+/* 👨 아빠 모드 */
+.dadopen{width:100%;margin-top:10px}
+.dadbox .dadhint{margin:0 0 8px;color:var(--ink-soft)}
+.dadinput{width:100%;box-sizing:border-box;font-size:22px;font-weight:800;letter-spacing:4px;text-align:center;border:3px solid var(--line);border-radius:12px;padding:10px;font-family:inherit}
+.dadmsg{min-height:20px;margin-top:6px;font-size:14px;color:#92400E;font-weight:700}
+.dadstars{font-size:20px;font-weight:800;background:#FFF7D6;border:3px solid #F4C430;border-radius:14px;padding:10px 12px;margin:6px 0 10px;text-align:center}
+.dadstars b{font-size:28px}
+.dadsec{margin-top:10px;padding:10px 12px;border:3px dashed var(--line);border-radius:14px}
+.dadhead{font-weight:800;margin-bottom:8px}
+.dadquick{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.dadquick .btn{padding:10px 0;font-size:18px}
