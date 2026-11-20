@@ -21,7 +21,9 @@ const modesNow=()=>CUR[P.group].modes;
 // [2026-11-01] 단계는 아무거나 골라도 되고, 별·진도는 아이 학년 학기와 그보다 높은 학기만 인정(낮은 학기는 복습).
 const eligibleNow=()=>gradeAllows(P.group);
 const modeInfo=id=>modesNow().find(m=>m.id===id);
-const STICKERS=['🦁','🐼','🦊','🐰','🐨','🦄','🐙','🦖','🐳','🦋','🌈','🍩','🚀','🎸','🏆','🎁','🐯','🐧','🦉','🍭'];
+/* [2026-11-20] 스티커 120종. 이미 가진 스티커는 다시 나오지 않고, 오래된 스티커도 지우지 않아요. */
+const STICKERS=['🦁','🐼','🦊','🐰','🐨','🦄','🐙','🦖','🐳','🦋','🌈','🍩','🚀','🎸','🏆','🎁','🐯','🐧','🦉','🍭','🐶','🐱','🐹','🐻','🐸','🐵','🐔','🐥','🦆','🦅','🐺','🐗','🐴','🦓','🦒','🐘','🦏','🐪','🐿️','🦔','🦇','🐢','🐍','🦎','🐊','🐬','🐋','🦈','🐠','🐡','🦀','🦞','🦐','🦑','🐌','🐞','🐝','🦗','🕷️','🦂','🦩','🦚','🦜','🦢','🕊️','🐲','🍎','🍓','🍒','🍉','🍌','🍍','🥝','🍕','🍔','🍟','🍦','🍰','🧁','🍪','⚽','🏀','⚾','🎾','🏐','🎨','🎹','🥁','🎺','🎻','🚗','🚒','🚓','🚜','✈️','🚁','⛵','🚂','🚲','⭐','🌙','☀️','⛄','🔥','🌸','🌻','🍀','🌵','🍄','🔮','👑','💎','🧸','🪁','🎈','🎀','🛸','🤖','🧩','🪀'];
+function newSticker(){const left=STICKERS.filter(s=>!P.stickers.includes(s));return left.length?pick(left):'';}
 function makePlan(){return ['low','low',...shuffle([...Array(LV_COUNT.mid).fill('mid'),...Array(LV_COUNT.high).fill('high')])];}
 function roundStars(correct,highOk,highTotal){const score=pct(correct);let s=score>=100?2:score>=80?1:0;if(highTotal&&highOk>=highTotal)s+=1;return s;}
 
@@ -252,7 +254,7 @@ function endRound(){
  else if(dy.earned>=DAILY_CAP){earn=0;why='오늘 별을 모두 모았어요. 진도는 계속 진행할 수 있어요.';}
  else earn=Math.min(earn,DAILY_CAP-dy.earned);
  if(currentlyEligible){dy.plays[key]=(dy.plays[key]||0)+1;if(earn>0)dy.got[key]=true;dy.earned+=earn;if(earn>0){if(typeof starEarn==='function')starEarn(P,earn);else P.wallet+=earn;}}
- let sticker='';if(currentlyEligible&&stars){sticker=pick(STICKERS);P.stickers.push(sticker);if(P.stickers.length>80)P.stickers.shift();}
+ let sticker='',stickerFull=false;if(currentlyEligible&&stars){sticker=newSticker();if(sticker)P.stickers.push(sticker);else stickerFull=true;}
  const out=STAGE_SYSTEM.finish(P,S.group,S.stage,{official:S.official&&currentlyEligible,correct:S.correct,total:S.plan.length,highOk:S.highOk,reviewCorrect:S.reviewCorrect,fingerprints:S.fingerprints,date:today()});
  const step=STAGE_SYSTEM.step(P,S.group,S.stage),info=STAGE_SYSTEM.meta(S.group,S.stage);
  let title=out.semesterClear?'학기 졸업!':out.stageClear?'단계를 통과했어요!':out.training?'연습 완료! 이제 도전해요':out.passed?'도전 통과! 한 번 더 확인해요':S.official?'틀린 유형을 살피고 다시 도전해요':'복습을 마쳤어요';
@@ -260,7 +262,7 @@ function endRound(){
  $('#totalStars').textContent=famStars();$('#groupTog').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.g===P.group));
  store.save(P);
  const next=out.semesterClear?(out.nextGroup?'<button class="btn purple" onclick="startStage(1)">다음 학기 1단계</button>':''):out.stageClear?'<button class="btn purple" onclick="startStage('+(S.stage+1)+')">다음 단계</button>':'<button class="btn blue" onclick="'+(S.unitPractice?'startMode(\''+S.mode+'\')':'startStage('+S.stage+')')+'">'+(out.training?'도전 시작':'새 문제로 다시 하기')+'</button>';
- $('#resultCard').innerHTML='<div class="stage-result-kicker">'+GROUPS[S.group].sub+' · '+S.stage+'단계 · '+S.title+'</div><h2 class="display">'+title+'</h2><p>'+message+'</p><div class="stat"><span>점수<b>'+score+'점</b></span><span>현재 범위<b>'+S.currentCorrect+' / '+planN('current')+'</b></span><span>응용 복습<b>'+S.reviewCorrect+' / '+planN('review')+'</b></span><span>상 문제<b>'+S.highOk+' / '+highTotal+'</b></span></div><div class="walletline">'+(earn?'별 '+earn+'개 획득! ':'')+why+'<br>모은 별(시원+나은) '+famStars()+'개 · 오늘 '+dy.earned+'/'+DAILY_CAP+'</div>'+(sticker?'<div class="newst">새 스티커 <b>'+sticker+'</b></div>':'')+'<p class="stage-note">계산만 반복하지 않고, 틀린 유형의 풀이를 읽고 새 문제로 확인해요.</p><div class="row" style="justify-content:center"><button class="btn ghost" onclick="goHome()">홈으로</button>'+next+'</div>';
+ $('#resultCard').innerHTML='<div class="stage-result-kicker">'+GROUPS[S.group].sub+' · '+S.stage+'단계 · '+S.title+'</div><h2 class="display">'+title+'</h2><p>'+message+'</p><div class="stat"><span>점수<b>'+score+'점</b></span><span>현재 범위<b>'+S.currentCorrect+' / '+planN('current')+'</b></span><span>응용 복습<b>'+S.reviewCorrect+' / '+planN('review')+'</b></span><span>상 문제<b>'+S.highOk+' / '+highTotal+'</b></span></div><div class="walletline">'+(earn?'별 '+earn+'개 획득! ':'')+why+'<br>모은 별(시원+나은) '+famStars()+'개 · 오늘 '+dy.earned+'/'+DAILY_CAP+'</div>'+(sticker?'<div class="newst">새 스티커 <b>'+sticker+'</b></div>':stickerFull?'<div class="newst">스티커를 모두 모았어요! 🎉</div>':'')+'<p class="stage-note">계산만 반복하지 않고, 틀린 유형의 풀이를 읽고 새 문제로 확인해요.</p><div class="row" style="justify-content:center"><button class="btn ghost" onclick="goHome()">홈으로</button>'+next+'</div>';
  if(out.progressed||stars>=2)audio.win();voice.say(title);show('result');
 }
 
