@@ -29,7 +29,7 @@ function kidApply(o){o=o||P;const g=kidGrade();if(g)o.myGroup=g.group;}
 const kidCodeBase=c=>{c=String(c||'');return c.length>8&&c.endsWith(KID_CODE_SUFFIX)?c.slice(0,-KID_CODE_SUFFIX.length):c;};
 const kidCodeFor=(base,kid)=>{base=kidCodeBase(base);return base&&(kid||KID)==='naeun'?base+KID_CODE_SUFFIX:base;};
 const store={key(){return (KID_PROFILES[KID]&&KID_PROFILES[KID].store)||'mathplay-all-v1';},load(){try{return JSON.parse(localStorage.getItem(this.key())||'{}')}catch(e){return {}}},save(d){try{localStorage.setItem(this.key(),JSON.stringify(d))}catch(e){}}};
-let P=store.load();P.group=P.group||'11';P.stickers=P.stickers||[];P.done=P.done||{};P.cardPlays=P.cardPlays||0;
+let P=store.load();P.group=P.group||'11';P.stickers=[...new Set(P.stickers||[])];P.done=P.done||{};P.cardPlays=P.cardPlays||0;
 const DAILY_CAP=6,SAME_LIMIT=1; // 하루 별 상한 6개, 같은 단원은 하루 1번만 별
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}; // 현지 날짜 기준
 function daily(){if(!P.daily||P.daily.d!==today())P.daily={d:today(),earned:0,plays:{},got:{}};P.daily.got=P.daily.got||{};return P.daily;}
