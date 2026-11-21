@@ -59,7 +59,7 @@ function cloudProgress(s){
   for(const g in d){const u=d[g]||{};for(const k in u){doneN++;doneBest+=n(u[k]&&u[k].best);}}
   let stage=0;const sem=(s.stageProgress&&s.stageProgress.semesters)||{};
   for(const g in sem){const st=(sem[g]&&sem[g].steps)||{};for(const k in st){const x=st[k]||{};stage+=(x.training?1:0)+n(x.passes)+(x.complete?1:0);}}
-  return {earned:n(s.wallet)+5*n(s.cardPlays),cards:n(s.cardPlays),stickers:(s.stickers||[]).length,doneN,doneBest,grad:Object.keys(s.grad||{}).length,stage};
+  return {earned:n(s.wallet)+5*n(s.cardPlays),cards:n(s.cardPlays),stickers:new Set(s.stickers||[]).size,doneN,doneBest,grad:Object.keys(s.grad||{}).length,stage};
 }
 /* a가 b보다 'ahead'(더 많음) / 'behind'(더 적음) / 'equal' / 'diverged'(서로 다른 진도) */
 function cloudCompare(a,b){
@@ -96,9 +96,8 @@ function cloudMerge(L,R){
   const m=cloudClone(base),n=v=>Number(v)||0;
   // 별·카드놀이: 별 장부를 기기별로 합쳐서 다시 계산 (동시에 받은 별도 모두 더해짐)
   m.ledger=ledgerMerge(L,R);ledgerApply(m);
-  // 스티커: 양쪽에 있는 것을 모두 (같은 스티커는 많은 쪽 개수만큼)
-  const have={};m.stickers=(base.stickers||[]).slice();m.stickers.forEach(x=>have[x]=(have[x]||0)+1);
-  const seen={};(other.stickers||[]).forEach(x=>{seen[x]=(seen[x]||0)+1;if(seen[x]>(have[x]||0)){m.stickers.push(x);have[x]=(have[x]||0)+1;}});
+  // 스티커: 양쪽에 있는 것을 모두, 같은 스티커는 하나만 [2026-11-21 중복 정리]
+    m.stickers=[...new Set([...(base.stickers||[]),...(other.stickers||[])])];
   // 단원 기록: 단원마다 더 좋은 기록
   m.done=m.done||{};const od=other.done||{};
   for(const g in od){m.done[g]=m.done[g]||{};for(const k in od[g]){const a=m.done[g][k],b=od[g][k];
@@ -134,7 +133,7 @@ function cloudBackup(reason,state){
 const CLOUD={api:'api/state',pushTimer:null,pulling:false,status:'',last:0,remoteT:0,depth:0,note:'',
   code(){return P.family||'';},
   on(){return !!P.family;},
-  pack(){const o={};SYNC_KEYS.forEach(k=>{if(P[k]!==undefined)o[k]=cloudClone(P[k]);});o.stickers=(P.stickers||[]).slice();o.t=P.t||Date.now();return o;},
+  pack(){const o={};SYNC_KEYS.forEach(k=>{if(P[k]!==undefined)o[k]=cloudClone(P[k]);});o.stickers=[...new Set(P.stickers||[])];o.t=P.t||Date.now();return o;},
   setNote(t){this.note=t?`${new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})} ${t}`:'';},
   /* 서버 기록 s와 이 기기 기록을 비교해서 안전하게 맞추기 */
   async reconcile(s){
@@ -159,7 +158,7 @@ const CLOUD={api:'api/state',pushTimer:null,pulling:false,status:'',last:0,remot
     }catch(e){this.status='offline';}finally{this.pulling=false;renderCloudBadge();}
     if(STAR.shared()){STAR.migrate();await STAR.sync();} // 가족 별(시원+나은) 맞추기
   },
-  applyRemote(s){const fam=P.family;SYNC_KEYS.forEach(k=>{if(s[k]!==undefined)P[k]=cloudClone(s[k]);});if(!ledgerValid(s.ledger))delete P.ledger;else ledgerApply(P);P.t=s.t||Date.now();P.family=fam;
+  applyRemote(s){const fam=P.family;SYNC_KEYS.forEach(k=>{if(s[k]!==undefined)P[k]=cloudClone(s[k]);});if(!ledgerValid(s.ledger))delete P.ledger;else ledgerApply(P);P.stickers=[...new Set(P.stickers||[])];P.t=s.t||Date.now();P.family=fam;
     fixGroups(P);if(typeof kidApply==='function')kidApply(P);const stale=s.resetV!==RESET_V;if(stale){P.resetV=null;applyReset(P);P.news=false;}
     if(stale)store.save(P);else _storeSaveRaw(P);voice.on=GROUPS[P.group].voice;$('#voiceBtn').classList.toggle('off',!voice.on);
     if(!$('#home').classList.contains('hidden'))renderHome();},
