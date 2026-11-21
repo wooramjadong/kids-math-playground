@@ -15,7 +15,7 @@ function progressOf(s){
   for(const g in d){const u=d[g]||{};for(const k in u){doneN++;doneBest+=n(u[k]&&u[k].best);}}
   let stage=0;const sem=(s.stageProgress&&s.stageProgress.semesters)||{};
   for(const g in sem){const st=(sem[g]&&sem[g].steps)||{};for(const k in st){const x=st[k]||{};stage+=(x.training?1:0)+n(x.passes)+(x.complete?1:0);}}
-  return {earned:n(s.wallet)+5*n(s.cardPlays),cards:n(s.cardPlays),stickers:(s.stickers||[]).length,doneN,doneBest,grad:Object.keys(s.grad||{}).length,stage};
+  return {earned:n(s.wallet)+5*n(s.cardPlays),cards:n(s.cardPlays),stickers:new Set(s.stickers||[]).size,doneN,doneBest,grad:Object.keys(s.grad||{}).length,stage};
 }
 function losesProgress(next,prev){const a=progressOf(next),b=progressOf(prev);return Object.keys(a).some(k=>a[k]<b[k]);}
 
@@ -73,6 +73,7 @@ const handler=async(req,res)=>{
     if(req.method==='PUT'||req.method==='POST'){
       let body=req.body;if(typeof body==='string'){try{body=JSON.parse(body||'{}');}catch(e){body=null;}}
       if(!body||typeof body!=='object'||typeof body.t!=='number')return res.status(400).json({error:'bad_body'});
+      if(Array.isArray(body.stickers))body.stickers=[...new Set(body.stickers)]; // 같은 스티커는 하나만 [2026-11-21]
       const s=JSON.stringify(body);if(s.length>100000)return res.status(413).json({error:'too_big'});
       const cur=await redis(['GET',key]);const prev=cur.result?JSON.parse(cur.result):null;
       if(prev&&typeof prev.t==='number'&&prev.t>body.t)return res.status(200).json({ok:false,stale:true,state:prev});
