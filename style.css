@@ -4,7 +4,7 @@
   --line:#E6E1D3; --card:#fff; --r:22px;
 }
 *{box-sizing:border-box}
-html,body{margin:0;min-height:100%}
+html,body{margin:0;min-height:100%;overscroll-behavior-y:none} /* [2026-11-21] 아래로 길게 끌면 새로고침되던 것 막기 */
 body{font-family:'Noto Sans KR',system-ui,-apple-system,sans-serif;color:var(--ink);line-height:1.4;
   background-color:var(--paper);
   background-image:linear-gradient(var(--grid) 1.5px,transparent 1.5px),linear-gradient(90deg,var(--grid) 1.5px,transparent 1.5px);
